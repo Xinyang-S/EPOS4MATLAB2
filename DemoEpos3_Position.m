@@ -2,7 +2,7 @@ clc
 clear
 %variables
 moveDistance = 4000;
-wait = 4.0;
+wait = 4.0; % second
 Motor1 = Epos4(0,0);
 Motor1.ClearErrorState;
 Motor1.EnableNode;
