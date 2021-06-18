@@ -1,7 +1,4 @@
-clear u1
-clear u2
-clear u3
-clear u4
+clear u1 u2 u3 u4
 u4 = udpport("LocalPort",1000);
 u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 force_array = [];
@@ -28,6 +25,8 @@ hi5Target_ZA_wristPos = {};
 hi5Target_ZA_targetPos = {};
 hi5Position = {};
 
+%% Run Python Code Here
+
 % hi5 initialization
 Motor1 = Epos4(0,0);
 Motor1.ClearErrorState;
@@ -37,7 +36,7 @@ Motor1.EnableNode;
 Motor1.ClearErrorState;
 
 while(1)
-    %target tracking trials 
+%target tracking trials 
 velocity = Motor1.ActualVelocity;
 velocity_array = [velocity_array velocity];
 current = Motor1.ActualCurrent;
@@ -46,7 +45,8 @@ current_array = [current_array current];
 %for hi5 tracking traj = sinPos; for grip sensor traj = newton
 %for hi5 position traj = position;
 while (true)
-    read(u4,3,'double')
+    flush(u4)
+    read(u4,1,'double')
 end
 
 
