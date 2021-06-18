@@ -110,10 +110,13 @@ switch exp_num
         c = clock;
         clockStart = c(4)*3600+c(5)*60+c(6);
         trial_num= 1;
+        hold = 10;
+        rest = 5;
+        clock_counter = 0;
         while(exp_num == 6)
-            
             if trial_num ~= 0
-%                 flush(u4);
+                 clock_counter = clock_counter+1;
+               
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 sinTime = clockCurrent - clockStart;
@@ -136,6 +139,9 @@ switch exp_num
                     end
                     disp(data_string);
                     write(u2,data_string,"string","LocalHost",4000);
+                      if clock_counter == 1
+                            time_starttrial = clock
+                     end 
                     data_string = [];
                     disp('write');
                 end
@@ -148,13 +154,17 @@ switch exp_num
                 force_target_array = [];
                 force_array = [];
             end
-            %flush(u4)
+            
 %             disp('read')
 %             app_data = read(u4,4,'string');
 %             app_data_string = split(app_data,'');
 %             exp_num = str2num(app_data_string(2));
 %             trial_num = str2num(strcat(app_data_string(3),app_data_string(4),app_data_string(5)));
-%             
+            c_trial = clock;
+            if ((c_trial(5)*60+c_trial(6)) - (time_starttrial(5)*60+time_starttrial(6))) >= 10 %length of the trial desired 
+                trial_num = 0;
+                disp('end triL');
+            end 
         end
         griptrack.gripforce = gripforce;
         griptrack.gripforcetarget = gripforce_target;
