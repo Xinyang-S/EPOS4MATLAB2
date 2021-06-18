@@ -9,12 +9,50 @@ disp('estop')
 clc
 clear
 
-%variables
+%FES Setup
+% Set up Bluetooth connection with Technalia FES device
+clear bt
+bt = bluetooth("0016A474B78F", 1);  %MAC address of device 
+writeline(bt,"iam DESKTOP");
+writeline(bt,"battery ? ");
+writeline(bt,"elec 1 *pads_qty 16");
+
+elecname = "testname1";
+
+% Write new stim file (last char of string not transmitted -> add space at end of string)
+writeline(bt, "sdcard rm default/test/ve5.ptn ")
+writeline(bt, "sdcard cat > default/test/ve5.ptn ")
+writeline(bt, "sdcard ed default/test/ve5.ptn CONST CONST R 100 100 3000 ") % PW Time Amp
+
+% elecArray = [9];  %modify per person using fesapp % Currently models and scripts set to only stim with one electrode!
+elecArrayFlex = [9];
+maxStimAmpFlex = 10; %modify per person using fesapp - 1mA below discomfort at 25Hz, 300us PW 
+minStimAmpFlex = 3; %modify per person using fesapp - 1mA below feeling
+elecArrayExt = [3];
+maxStimAmpExt = 10; %modify per person using fesapp - 1mA below discomfort  at 25Hz, 300us PW
+minStimAmpExt = 3; %modify per person using fesapp - 1mA below feeling
+maxDisp = 40 * 6400 / 90; %max displacement is +-45 degrees * 6400/90 - converted to encoder units
+KW_Flex = (maxStimAmpFlex - minStimAmpFlex) / maxDisp;
+KW_Ext = (maxStimAmpExt - minStimAmpExt) / maxDisp;
+
+writeline(bt,strcat("freq ",num2str(25), " "));      %Set stim frequency
+cmd = generate_command(elecArrayFlex, [0], [300], elecname, velecnumber); % Params for start stimulation - array, amp, PW
+writeline(bt,cmd)                               %Start stimulation
+writeline(bt,strcat("stim on "));               %Start stimulation 
+
+writeline(bt,strcat("freq ",num2str(25), " "));      %Set stim frequency
+cmd = generate_command(elecArrayExt, [0], [300], elecname, velecnumber); % Params for start stimulation - array, amp, PW
+writeline(bt,cmd)                               %Start stimulation
+writeline(bt,strcat("stim on "));               %Start stimulation 
+
+%Robot Variables
 hold = 10;
 currentMaxP = 10000;
 currentMaxN = -10000;
-KW = 8; %spring: 1 light, 2 med, 3 large, 4 heavy (limit)
-DW = 50; %damper: 2 works for spring 1-4, larger for 5+
+%Stiffness Equation I = K * R^2 * error_deg * 2 * PI / ( 360 * torqueConst ) % m*(N/m)*m*A/Nm = A
+% I = (posError * 90/6400) * 1000mA * 120 * 0.1^2 * 2 * pi / ( 360 * 0.136 )
+KW = 0.5; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit), 2.17 = Hi5 papers
+DW = 0; %damper: 2 works for spring 1-4, larger for 5+
 filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
 MW = 0; %0.001 //wall
 freq_traj = 1; %frequency of desired trajectory
@@ -50,7 +88,7 @@ currentPosition=0;
 while (clockStart < clockStartPrev + hold)
     c = clock;
     clockStart = c(4)*3600+c(5)*60+c(6);
-    %disp(encTomV(startPosition, Motor1.ActualPosition))
+    
     %desired trajectory 
     startPositionNew = startPosition + amp_traj*sin((clockStart-clockBegin)*freq_traj);
 
@@ -58,30 +96,38 @@ while (clockStart < clockStartPrev + hold)
         currentPosition = Motor1.ActualPosition;
         posError = currentPosition - startPositionNew;
 
-        %calculate error velocity
-        posErrorDiffNew = posError - posErrorPrev;
-        posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
-        posClockDiff = clockStart - posClockPrev;
-
-        %if inside wall - current = KW*distance + DW*Velocity
-        current = -1*(KW*posError + DW*posErrorDiff);  
+        %Robot control
+        %current = KW*distance
+        current = -1 * KW*posError;        
         if (current > currentMaxP)
            current = currentMaxP;
-           disp('Wall Too Strong!')
+           disp('Cuurent Max!')
         elseif (current < currentMaxN)
            current = currentMaxN;
-           disp('Wall Broke!')
+           disp('Cuurent Max!')
         else
           Motor1.MotionWithCurrent(current);
         end
-
-        posErrorPrev = posError;
-        posErrorDiffPrev = posErrorDiff;
-        posClockPrev = clockStart;
-        clockPrev = clockStart;
-        %save data (time, desired trajectory, actual trajectory, desired current, actual current)
-        loopCounter = loopCounter+1;
-        data(loopCounter,:) = [clockStart startPositionNew currentPosition current];
+        
+        %FES control - for Hi5
+        if (posError < 0)
+            fesAmpFlex = (KW_Flex * -posError) + minStimAmpFlex;
+            fesAmpExt = 0;
+        elseif (posError > 0)
+            fesAmpFlex = 0;
+            fesAmpExt = (KW_Ext * posError) + minStimAmpExt;
+        else
+             fesAmpFlex = 0;
+             fesAmpExt = 0;
+        end
+        if clockNew > clockPrev+0.05      %Send stim every 0.01s
+%         disp(pwFES(end))`
+        cmd = generate_command(elecArray, [stimAmp], round(pwFES(end)), elecname, velecnumber);
+        writeline(bt,cmd)
+        clockPrev = clockNew; 
+    end
+        
+        
 end
 
 delete(Motor1);

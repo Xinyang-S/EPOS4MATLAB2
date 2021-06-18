@@ -1,8 +1,4 @@
-function [Force] = GetForce()
-force = textread('D:\IC-Msc\Project\EPOS4MATLAB2\Force.txt','%f');
-while isempty(force)
-    pause(0.01)
-    force = textread('D:\IC-Msc\Project\EPOS4MATLAB2\Force.txt','%f');
-end
-Force = force;
+function [force] = GetForce()
+force = textread('C:\Users\Wacom hrg\MATLAB\Projects\EPOS4MATLAB2-main\Force.txt','%f');
+
 end

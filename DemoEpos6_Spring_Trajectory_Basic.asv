@@ -13,8 +13,10 @@ clear
 hold = 10;
 currentMaxP = 10000;
 currentMaxN = -10000;
-KW = 8; %spring: 1 light, 2 med, 3 large, 4 heavy (limit)
-DW = 50; %damper: 2 works for spring 1-4, larger for 5+
+%Stiffness Equation I = K * R^2 * error_deg * 2 * PI / ( 360 * torqueConst ) % m*(N/m)*m*A/Nm = A
+% I = (posError * 90/6400) * 1000mA * 120 * 0.1^2 * 2 * pi / ( 360 * 0.136 )
+KW = 2.17; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
+DW = 0; %damper: 2 works for spring 1-4, larger for 5+
 filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
 MW = 0; %0.001 //wall
 freq_traj = 1; %frequency of desired trajectory
@@ -50,14 +52,15 @@ currentPosition=0;
 while (clockStart < clockStartPrev + hold)
     c = clock;
     clockStart = c(4)*3600+c(5)*60+c(6);
-    %disp(encTomV(startPosition, Motor1.ActualPosition))
+    encTomV(startPosition, Motor1.ActualPosition);
+    
     %desired trajectory 
     startPositionNew = startPosition + amp_traj*sin((clockStart-clockBegin)*freq_traj);
 
     %calculate distance into wall
         currentPosition = Motor1.ActualPosition;
         posError = currentPosition - startPositionNew;
-
+        posError*( 90 / 6400 )* 0.1 * 2 * pi / 360
         %calculate error velocity
         posErrorDiffNew = posError - posErrorPrev;
         posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
