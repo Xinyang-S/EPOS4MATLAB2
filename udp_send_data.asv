@@ -7,6 +7,7 @@ encoder_array = [];
 velocity_array = [];
 current_array = [];
 data_string = [];
+Error_array = [];
 
 gripMaintain = {};
 gripForce = {};
@@ -47,15 +48,15 @@ while(1)
 %for hi5 tracking traj = sinPos; for grip sensor traj = newton
 %for hi5 position traj = position;
 % flush(u4)
-disp(1)
+% disp(1)
 app_data = read(u4,4,'string');
 app_data_string = split(app_data,'');
 disp(app_data)
-exp_num = str2num(app_data(1))
-trial_num = str2num(app_data(2:4))
+exp_num = str2num(app_data_string(2))
+trial_num = str2num(strcat(app_data_string(3),app_data_string(4),app_data_string(5)))
 
 switch exp_num
-    case '1'%hi5 full-assisted target tracking
+    case 1 %hi5 full-assisted target tracking
         if trial_num ~= 0
             while trial_num ~= 0
                 [exp_num, trial_num, traj] = read(u4,1,'double');
@@ -70,7 +71,7 @@ switch exp_num
             hi5_FA_traj = [];
             encoder_array = [];
         end
-    case '2'%hi5 semi-assisted target tracking
+    case 2 %hi5 semi-assisted target tracking
         if trial_num ~= 0
             while trial_num ~= 0
                 [exp_num, trial_num, traj] = read(u4,1,'double');
@@ -85,10 +86,10 @@ switch exp_num
             hi5_SA_traj = [];
             encoder_array = [];
         end
-    case '3'%hi5 zero-assisted target tracking
+    case 3 %hi5 zero-assisted target tracking
         if trial_num ~= 0
             while trial_num ~= 0
-                [exp_num, trial_num, traj] = read(u4,1,'double');
+                [exp_num, trial_num, traj] = read(u4,1,'string');
                 hi5_ZA_traj = [hi5_ZA_traj traj];
                 encoder = Motor1.ActualPosition;
                 encoder_array = [encoder_array encoder];
@@ -100,10 +101,11 @@ switch exp_num
             hi5_ZA_traj = [];
             encoder_array = [];
         end        
-    case '4'%hi5 position track
+    case 4 %hi5 position track
         
-    case '5'%torque stablization
-    case '6'%grip tracking
+    case 5 %torque stablization
+    case 6 %grip tracking
+        disp('Task: grip tracking')
         %numTrials = 1; %max number of trials 
         c = clock;
         clockStart = c(4)*3600+c(5)*60+c(6);
@@ -114,15 +116,15 @@ switch exp_num
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 sinTime = clockCurrent - clockStart;
                 force_target = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
-                blueY= 6.8*(sinPos)+335;
-                force = Getforce();
+                blueY= 6.8*(force_target)+335;
+                force = GetForce();
                 
                 if (~isempty(force))
                     force_display = (-10)*((-(60*force))/6400*90)+100;
                     ErrorSample = sqrt((force_target-force)^2);
                     Error_array = [Error_array ErrorSample];
                     Error = mean(Error_array);
-                    data_box = [force_target force_display Error];
+                    data_box = [round(force_target) round(force_display) round(Error)];
                     for i = 1:(length(data_box))
                         data_string = [data_string uniform_data(data_box(i))];
                     end
@@ -137,17 +139,19 @@ switch exp_num
                 force_target_array = [];
                 force_array = [];
             end
-            flush(u4)
-            app_data = read(u4,1,'double');
-            exp_num = app_data(1);
-            trial_num = app_data(2:4); 
+            %flush(u4)
+            app_data = read(u4,1,'string');
+            app_data_string = split(app_data,'');
+            exp_num = str2num(app_data_string(2));
+            trial_num = str2num(strcat(app_data_string(3),app_data_string(4),app_data_string(5)));
+
         end
         griptrack.gripforce = gripforce
         griptrack.gripforcetarget = gripforce_target;
         save ('griptrack.mat','griptrack');
         
-    case '7'%grip force maintain
-    case '9'% save all the data in workspace
+    case 7 %grip force maintain
+    case 9 % save all the data in workspace
         hi5Targer_fullAssisted.WristPos = hi5Target_FA_wristPos;
         hi5Targer_fullAssisted.TatgetPos = hi5Target_FA_targetPos;
         save('hi5Targer_fullAssisted.mat','hi5Target_fullAssisted');
