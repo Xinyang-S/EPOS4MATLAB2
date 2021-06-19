@@ -132,13 +132,9 @@ switch exp_num
                     data_string = [data_string uniform_data(data_box(i))];
                 end
                 write(u2,data_string,"string","LocalHost",4000);
-%                 if clock_counter == 1
-%                     time_starttrial = clock;
-%                 end
                 data_string = [];
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
-            
             end
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
@@ -155,6 +151,7 @@ switch exp_num
         save ('gripTrack.mat','griptrack');
         
     case 7 %grip force maintain
+        
     case 9 % save all the data in workspace
         hi5Targer_fullAssisted.WristPos = hi5Target_FA_wristPos;
         hi5Targer_fullAssisted.TatgetPos = hi5Target_FA_targetPos;
