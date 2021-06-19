@@ -10,7 +10,9 @@ data_string = [];
 Error_array = [];
 
 gripMaintain = {};
+gripTrack = {};
 gripForce = {};
+
 hi5Torque = {};
 
 hi5_FA_traj = [];
@@ -108,8 +110,11 @@ switch exp_num
     case 5 %torque stablization
     case 6 %grip tracking
         disp('Task: grip tracking')
-        %numTrials = 1; %max number of trials 
         trial_num = 1;
+        gripTrack = {};
+        gripforce = {};
+        gripforce_target = {};
+        
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
@@ -143,14 +148,59 @@ switch exp_num
             force_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
-            disp('endoftrial');
+            disp('end of trial');
             pause(5);% time for ready count down in AppDesigner
         end
-        griptrack.gripforce = gripforce;
-        griptrack.gripforcetarget = gripforce_target;
-        save ('gripTrack.mat','griptrack');
+        gripTrack.gripForce = gripforce;
+        gripTrack.gripForceTarget = gripforce_target;
+        save ('gripTrack.mat','gripTrack');
         
     case 7 %grip force maintain
+        disp('Task: grip force maintain')
+        trial_num = 1;
+        gripForceMaintain = {};
+        gripforce = {};
+        gripforce_target = {};
+        
+        while(trial_num <= total_trial_num)
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+            while (clockCurrent < clockStart + trial_length)
+                
+                c = clock;
+                clockCurrent = c(4)*3600+c(5)*60+c(6);
+                strength = randi(3);
+                blueY= 6.8*(force_target)+335;
+                force = GetForce();
+                
+                force_display = force;
+                ErrorSample = sqrt((force_target-force)^2);
+                Error_array = [Error_array ErrorSample];
+                Error = mean(Error_array);
+                data_box = [roundn(force_target,-5) roundn(force_display,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                disp(data_box);
+                for i = 1:(length(data_box))
+                    data_string = [data_string uniform_data(data_box(i))];
+                end
+                write(u2,data_string,"string","LocalHost",4000);
+                data_string = [];
+                force_array = [force_array force];
+                force_target_array = [force_target_array force_target];
+            end
+            force_name = strcat('trial',num2str(trial_num));
+            gripforce.(force_name) = force_array;
+            gripforce_target.(force_name) = force_target_array;
+            force_target_array = [];
+            force_array = [];
+            disp(trial_num);
+            trial_num = trial_num+1;
+            disp('end of trial');
+            pause(5);% time for ready count down in AppDesigner
+        end
+        gripForceMaintain.gripforce = gripforce;
+        gripForceMaintain.gripforcetarget = gripforce_target;
+        save ('gripForceMaintain.mat','gripForceMaintain');
         
     case 9 % save all the data in workspace
         hi5Targer_fullAssisted.WristPos = hi5Target_FA_wristPos;
