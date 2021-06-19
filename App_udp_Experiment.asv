@@ -134,9 +134,6 @@ switch exp_num
             clockCurrent = clockStart;
             strength = randi(3);
             while (clockCurrent < clockStart + trial_length)
-                if (clockCurrent > clockStart + 3)
-                    strength = 0;
-                end
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 force = GetForce();
