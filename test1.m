@@ -1,3 +1,0 @@
-while(true)
-    Get
-end

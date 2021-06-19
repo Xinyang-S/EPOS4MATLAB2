@@ -9,9 +9,6 @@ current_array = [];
 data_string = [];
 Error_array = [];
 
-gripMaintain = {};
-gripTrack = {};
-gripForce = {};
 
 hi5Torque = {};
 
@@ -124,7 +121,6 @@ switch exp_num
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 sinTime = clockCurrent - clockStart;
                 force_target = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
-                blueY= 6.8*(force_target)+335;
                 force = GetForce();
                 
                 force_display = force;
@@ -161,24 +157,19 @@ switch exp_num
         gripForceMaintain = {};
         gripforce = {};
         gripforce_target = {};
-        
+        Error = 0;
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
+            strength = randi(3);
             while (clockCurrent < clockStart + trial_length)
-                
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
-                strength = randi(3);
-                blueY= 6.8*(force_target)+335;
                 force = GetForce();
-                
+                elapsed_time = clockCurrent - clockStart;
                 force_display = force;
-                ErrorSample = sqrt((force_target-force)^2);
-                Error_array = [Error_array ErrorSample];
-                Error = mean(Error_array);
-                data_box = [roundn(force_target,-5) roundn(force_display,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                data_box = [roundn(strength,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
@@ -186,7 +177,7 @@ switch exp_num
                 write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
                 force_array = [force_array force];
-                force_target_array = [force_target_array force_target];
+                force_target_array = [force_target_array strength];
             end
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
