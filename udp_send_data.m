@@ -1,5 +1,5 @@
 clear u1 u2 u3 u4
-u4 = udpport("LocalPort",1000,'TimeOut',60);
+u4 = udpport("LocalPort",1000,'TimeOut',100);
 u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 force_array = [];
 force_target_array = [];
@@ -50,13 +50,12 @@ while(1)
 % flush(u4)
 % disp(1)
 flush(u4)
-app_data = read(u4,10,'string');
+app_data = read(u4,7,'string');
 app_data_string = split(app_data,'');
 disp(app_data)
 exp_num = str2num(app_data_string(2));
-%trial_num = str2num(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
-total_trial_num = str2num(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
-trial_length = str2num(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
+total_trial_num = str2num(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
+trial_length = str2num(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
 
 switch exp_num
     case 1 %hi5 full-assisted target tracking
@@ -133,9 +132,9 @@ switch exp_num
                     data_string = [data_string uniform_data(data_box(i))];
                 end
                 write(u2,data_string,"string","LocalHost",4000);
-                if clock_counter == 1
-                    time_starttrial = clock;
-                end
+%                 if clock_counter == 1
+%                     time_starttrial = clock;
+%                 end
                 data_string = [];
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
@@ -153,7 +152,7 @@ switch exp_num
         end
         griptrack.gripforce = gripforce;
         griptrack.gripforcetarget = gripforce_target;
-        save ('griptrack.mat','griptrack');
+        save ('gripTrack.mat','griptrack');
         
     case 7 %grip force maintain
     case 9 % save all the data in workspace
