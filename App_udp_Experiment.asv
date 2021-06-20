@@ -51,7 +51,7 @@ disp(app_data)
 exp_num = str2num(app_data_string(2));
 total_trial_num = str2num(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
 trial_length = str2num(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
-total_block_num = str2num(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
+block_num = str2num(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
 
 switch exp_num
     case 1 %hi5 full-assisted target tracking
@@ -126,41 +126,39 @@ switch exp_num
         gripforce = {};
         gripforce_target = {};
         Error = 0;
-        while(block_num <= total_block_num)
-            while(trial_num <= total_trial_num)
-                c = clock;
-                clockStart = c(4)*3600+c(5)*60+c(6);
-                clockCurrent = clockStart;
-                strength = randi(3);
-                while (clockCurrent < clockStart + trial_length)
-                    if (clockCurrent > clockStart + 3)
-                        strength = 0;
-                    end
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    force = GetForce();
-                    elapsed_time = clockCurrent - clockStart;
-                    force_display = force;
-                    data_box = [roundn(strength,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                    disp(data_box);
-                    for i = 1:(length(data_box))
-                        data_string = [data_string uniform_data(data_box(i))];
-                    end
-                    write(u2,data_string,"string","LocalHost",4000);
-                    data_string = [];
-                    force_array = [force_array force];
-                    force_target_array = [force_target_array strength];
+        while()
+        while(trial_num <= total_trial_num)
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+            strength = randi(3);
+            while (clockCurrent < clockStart + trial_length)
+                if (clockCurrent > clockStart + 3)
+                    strength = 0;
                 end
-                force_name = strcat('trial',num2str(trial_num));
-                gripforce.(force_name) = force_array;
-                gripforce_target.(force_name) = force_target_array;
-                force_target_array = [];
-                force_array = [];
-                disp(trial_num);
-                trial_num = trial_num+1;
-                disp('end of trial');
+                c = clock;
+                clockCurrent = c(4)*3600+c(5)*60+c(6);
+                force = GetForce();
+                elapsed_time = clockCurrent - clockStart;
+                force_display = force;
+                data_box = [roundn(strength,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                disp(data_box);
+                for i = 1:(length(data_box))
+                    data_string = [data_string uniform_data(data_box(i))];
+                end
+                write(u2,data_string,"string","LocalHost",4000);
+                data_string = [];
+                force_array = [force_array force];
+                force_target_array = [force_target_array strength];
             end
-            block_num = block_num + 1;
+            force_name = strcat('trial',num2str(trial_num));
+            gripforce.(force_name) = force_array;
+            gripforce_target.(force_name) = force_target_array;
+            force_target_array = [];
+            force_array = [];
+            disp(trial_num);
+            trial_num = trial_num+1;
+            disp('end of trial');
             pause(5);% time for ready count down in AppDesigner
         end
         gripForceMaintain.gripforce = gripforce;
