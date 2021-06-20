@@ -76,8 +76,8 @@ switch exp_num
                 target_current_pos = Motor1.ActualPosition;
                 subject_traj = -(target_current_pos - Zero_position)*90/6400;
                 % target position
-                sinTime = clockCurrent - clockStart;
-                target_traj = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
+                elapsed_time = clockCurrent - clockStart;
+                target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
                 
                 ErrorSample = sqrt((target_traj-subject_traj)^2);
                 Error_array = [Error_array ErrorSample];
@@ -99,7 +99,7 @@ switch exp_num
                     Motor1.MotionWithCurrent(current);
                 end
                 
-                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
@@ -173,8 +173,8 @@ switch exp_num
                 target_current_pos = Motor1.ActualPosition;
                 subject_traj = -(target_current_pos - Zero_position)*90/6400;
                 % target position
-                sinTime = clockCurrent - clockStart;
-                target_traj = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
+                elapsed_time = clockCurrent - clockStart;
+                target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
                 
                 ErrorSample = sqrt((target_traj-subject_traj)^2);
                 Error_array = [Error_array ErrorSample];
@@ -192,7 +192,7 @@ switch exp_num
                     Motor1.MotionWithCurrent(current);
                 end
                 
-                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
@@ -259,14 +259,14 @@ switch exp_num
                 target_current_pos = Motor1.ActualPosition;
                 subject_traj = -(target_current_pos - Zero_position)*90/6400;
                 % target position
-                sinTime = clockCurrent - clockStart;
-                target_traj = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
+                elapsed_time = clockCurrent - clockStart;
+                target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
                 
                 ErrorSample = sqrt((target_traj-subject_traj)^2);
                 Error_array = [Error_array ErrorSample];
                 Error = mean(Error_array);
                 
-                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
@@ -301,9 +301,157 @@ switch exp_num
         
 %--------------------------HI5 position track------------------------------
     case 4 %hi5 position track
+        %hi5 initialization
+        Motor1 = Epos4(0,0);
+        Motor1.ClearErrorState;
+        Motor1.DisableNode;
+        Motor1.SetOperationMode( OperationModes.CurrentMode );
+        Motor1.EnableNode;
+        Motor1.ClearErrorState;
+        
+        Zero_position = Motor1.ActualPosition;
+        
+        hi5Position_Track = {};%cell aray for positional data
+        hi5WristPos = {};%cell aray for positional data
+        hi5TargetPos = {};
+        hi5Velocity = {};
+        hi5Current = {};
+        target_traj_array = [];
+        subject_traj_array = [];
+        velocity_array = [];
+        current_array = [];
+        
+        trial_num = 1;
         
 %------------------------HI5 torque stablization---------------------------
     case 5 %torque stablization
+        %hi5 initialization
+        Motor1 = Epos4(0,0);
+        Motor1.ClearErrorState;
+        Motor1.DisableNode;
+        Motor1.SetOperationMode( OperationModes.CurrentMode );
+        Motor1.EnableNode;
+        Motor1.ClearErrorState;
+        
+        Zero_position = Motor1.ActualPosition;
+        
+        hi5Torque_Stablization = {};%cell aray for positional data
+        hi5WristPos = {};%cell aray for positional data
+        hi5TargetPos = {};
+        hi5Velocity = {};
+        hi5Current = {};
+        target_traj_array = [];
+        subject_traj_array = [];
+        velocity_array = [];
+        current_array = [];
+        
+        trial_num = 1;
+        while(block_num <= total_block_num)
+            trial_num = 1;
+            while(trial_num <= total_trial_num)
+                disp(['Trial index: ', num2str(trial_index)]);
+                c = clock;
+                clockStart = c(4)*3600+c(5)*60+c(6);
+                clockCurrent = clockStart;
+                strength = randi(3);
+                
+                % strength = 1,2,3 for first three trials
+                if trial_index == 1
+                    strength = 1;
+                elseif trial_index == 2
+                    strength = 2;
+                elseif trial_index == 3
+                    strength = 3;
+                end
+                
+                while (clockCurrent < clockStart + trial_length)
+                    
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    elapsed_time = clockCurrent - clockStart;
+                    
+                    if (clockCurrent > clockStart + 4)
+                        strength = 0;
+                    end
+                    
+                    switch strength
+                        case 0
+                            current = 0;
+                            Motor1.MotionWithCurrent(current);
+                        case 1
+                            if (clockStart > clockStartPrev+3.5)
+                                current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current = -2000;
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current=-2000*(2*(elapsed_time));
+                                Motor1.MotionWithCurrent(current);
+                            end
+                        case 2
+                            if (clockStart > clockStartPrev+3.5)
+                                current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current = -3000;
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current=-3000*(2*(elapsed_time));
+                                Motor1.MotionWithCurrent(current);
+                            end
+                        case 3
+                            if (clockStart > clockStartPrev+3.5)
+                                current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current = -4000;
+                                Motor1.MotionWithCurrent(current);
+                            elseif (clockStart > clockStartPrev+0.5)
+                                current=-4000*(2*(elapsed_time));
+                                Motor1.MotionWithCurrent(current);
+                            end
+                    end
+                    
+                    ErrorSample = sqrt((target_traj-subject_traj)^2);
+                    Error_array = [Error_array ErrorSample];
+                    Error = mean(Error_array);
+
+                    data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                    disp(data_box);
+                    for i = 1:(length(data_box))
+                        data_string = [data_string uniform_data(data_box(i))];
+                    end
+                    write(u2,data_string,"string","LocalHost",4000);
+                    data_string = [];
+                    velocity = Motor1.ActualVelocity;
+                    velocity_array = [velocity_array velocity];
+                    motor_current = Motor1.ActualCurrent;
+                    current_array = [current_array motor_current];
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
+                end
+                trial_name = strcat('trial',num2str(trial_num));
+                hi5WristPos.(trial_name) = subject_traj_array;
+                hi5TargetPos.(trial_name) = target_traj_array;
+                hi5Velocity.(trial_name) = velocity_array;
+                hi5Current.(trial_name) = current_array;
+                target_traj_array = [];
+                subject_traj_array = [];
+                trial_num = trial_num+1;
+                trial_index = trial_index+1;
+                disp(['end of trial']);
+            end
+            block_num = block_num + 1;
+            disp(['Block number: ', num2str(block_num)]);
+            pause(5);% time for ready count down in AppDesigner
+        end
+        hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
+        hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
+        hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
+        hi5Target_zeroAssisted.hi5Current = hi5Current;
+        save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
+
         
 %------------------------Grip target tracking------------------------------
     case 6 %grip tracking
@@ -322,15 +470,15 @@ switch exp_num
             while (clockCurrent < clockStart + trial_length)
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
-                sinTime = clockCurrent - clockStart;
-                force_target = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
+                elapsed_time = clockCurrent - clockStart;
+                force_target = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
                 force = GetForce();
                 
                 force_display = force;
                 ErrorSample = sqrt((force_target-force)^2);
                 Error_array = [Error_array ErrorSample];
                 Error = mean(Error_array);
-                data_box = [roundn(force_target,-5) roundn(force_display,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                data_box = [roundn(force_target,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
