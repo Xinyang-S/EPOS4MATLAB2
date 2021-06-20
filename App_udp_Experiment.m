@@ -120,18 +120,27 @@ switch exp_num
         
     case 7 %grip force maintain
         disp('Task: grip force maintain')
-        trial_num = 1;
         block_num = 1;
         gripForceMaintain = {};
         gripforce = {};
         gripforce_target = {};
         Error = 0;
+        trial_index = 1;
         while(block_num <= total_block_num)
+            trial_num = 1;
             while(trial_num <= total_trial_num)
+                disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
                 strength = randi(3);
+                if trial_index == 1
+                    strength = 1;
+                elseif trial_index == 2
+                    strength = 2;
+                elseif trial_index == 3
+                    strength = 3;
+                end
                 while (clockCurrent < clockStart + trial_length)
                     if (clockCurrent > clockStart + 3)
                         strength = 0;
@@ -151,16 +160,17 @@ switch exp_num
                     force_array = [force_array force];
                     force_target_array = [force_target_array strength];
                 end
-                force_name = strcat('trial',num2str(trial_num));
+                force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;
                 gripforce_target.(force_name) = force_target_array;
                 force_target_array = [];
                 force_array = [];
-                disp(trial_num);
                 trial_num = trial_num+1;
-                disp('end of trial');
+                trial_index = trial_index+1;
+                disp(['end of trial']);
             end
             block_num = block_num + 1;
+            disp(['Block number: ', num2str(block_num)]);
             pause(5);% time for ready count down in AppDesigner
         end
         gripForceMaintain.gripforce = gripforce;
@@ -179,7 +189,6 @@ switch exp_num
         save('hi5Targer_zeroAssisted.mat','hi5Target_zeroAssisted'); 
         
         
-        save('gripforce.mat','gripforce');
 
 end
 end
