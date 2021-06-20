@@ -73,8 +73,8 @@ switch exp_num
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 % subject position
-                target_current_pos = Motor1.ActualPosition;
-                subject_traj = -(target_current_pos - Zero_position)*90/6400;
+                subject_current_pos = Motor1.ActualPosition;
+                subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                 % target position
                 elapsed_time = clockCurrent - clockStart;
                 target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
@@ -96,6 +96,7 @@ switch exp_num
                 elseif (current < currentMaxN)
                     disp('Wall Broke!')
                 else
+                    current = safetyCheck(current);
                     Motor1.MotionWithCurrent(current);
                 end
                 
@@ -170,8 +171,8 @@ switch exp_num
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 % subject position
-                target_current_pos = Motor1.ActualPosition;
-                subject_traj = -(target_current_pos - Zero_position)*90/6400;
+                subject_current_pos = Motor1.ActualPosition;
+                subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                 % target position
                 elapsed_time = clockCurrent - clockStart;
                 target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
@@ -189,6 +190,7 @@ switch exp_num
                 elseif (current < currentMaxN)
                     disp('Wall Broke!')
                 else
+                    current = safetyCheck(current);
                     Motor1.MotionWithCurrent(current);
                 end
                 
@@ -256,8 +258,8 @@ switch exp_num
                 c = clock;
                 clockCurrent = c(4)*3600+c(5)*60+c(6);
                 % subject position
-                target_current_pos = Motor1.ActualPosition;
-                subject_traj = -(target_current_pos - Zero_position)*90/6400;
+                subject_current_pos = Motor1.ActualPosition;
+                subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                 % target position
                 elapsed_time = clockCurrent - clockStart;
                 target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
@@ -345,9 +347,12 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         
-        trial_num = 1;
+        Error = 0;
+        block_num = 1;
+        trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
+            Zero_position = Motor1.ActualPosition;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
@@ -377,47 +382,56 @@ switch exp_num
                     switch strength
                         case 0
                             current = 0;
+                            current = safetyCheck(current);
                             Motor1.MotionWithCurrent(current);
                         case 1
                             if (clockStart > clockStartPrev+3.5)
                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current = -2000;
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current=-2000*(2*(elapsed_time));
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             end
                         case 2
                             if (clockStart > clockStartPrev+3.5)
                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current = -3000;
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current=-3000*(2*(elapsed_time));
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             end
                         case 3
                             if (clockStart > clockStartPrev+3.5)
                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current = -4000;
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             elseif (clockStart > clockStartPrev+0.5)
                                 current=-4000*(2*(elapsed_time));
+                                current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             end
                     end
                     
-                    ErrorSample = sqrt((target_traj-subject_traj)^2);
-                    Error_array = [Error_array ErrorSample];
-                    Error = mean(Error_array);
-
-                    data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                    subject_position = Motor1.ActualPosition;
+                    subject_traj = -(subject_position - Zero_position)*90/6400;
+                    
+                    data_box = [roundn(strength,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                     disp(data_box);
                     for i = 1:(length(data_box))
                         data_string = [data_string uniform_data(data_box(i))];
@@ -438,19 +452,19 @@ switch exp_num
                 hi5Current.(trial_name) = current_array;
                 target_traj_array = [];
                 subject_traj_array = [];
-                trial_num = trial_num+1;
-                trial_index = trial_index+1;
+                trial_num = trial_num + 1;
+                trial_index = trial_index + 1;
                 disp(['end of trial']);
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
             pause(5);% time for ready count down in AppDesigner
         end
-        hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
-        hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
-        hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
-        hi5Target_zeroAssisted.hi5Current = hi5Current;
-        save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
+        hi5Torque_Stablization.hi5WristPos = hi5WristPos;
+        hi5Torque_Stablization.hi5TargetPos = hi5TargetPos;
+        hi5Torque_Stablization.hi5Velocity = hi5Velocity;
+        hi5Torque_Stablization.hi5Current = hi5Current;
+        save ('hi5Torque_Stablization.mat','hi5Torque_Stablization');
 
         
 %------------------------Grip target tracking------------------------------
@@ -529,11 +543,11 @@ switch exp_num
                     strength = 3;
                 end
                 while (clockCurrent < clockStart + trial_length)
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
                     if (clockCurrent > clockStart + 3)
                         strength = 0;
                     end
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
                     force = GetForce();
                     elapsed_time = clockCurrent - clockStart;
                     force_display = force;
@@ -552,8 +566,8 @@ switch exp_num
                 gripforce_target.(force_name) = force_target_array;
                 force_target_array = [];
                 force_array = [];
-                trial_num = trial_num+1;
-                trial_index = trial_index+1;
+                trial_num = trial_num + 1;
+                trial_index = trial_index + 1;
                 disp(['end of trial']);
             end
             block_num = block_num + 1;
