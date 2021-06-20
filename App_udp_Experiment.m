@@ -71,6 +71,7 @@ switch exp_num
         end
     case 2 %hi5 semi-assisted target tracking
     case 3 %hi5 zero-assisted target tracking track
+    case 4 %hi5 position track
     case 5 %torque stablization
     case 6 %grip tracking
         disp('Task: grip tracking')
