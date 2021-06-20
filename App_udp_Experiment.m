@@ -1,8 +1,7 @@
 clear u1 u2 u3 u4
 u4 = udpport("LocalPort",1000,'TimeOut',100);
 u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
-force_array = [];
-force_target_array = [];
+
 encoder_array = [];
 velocity_array = [];
 current_array = [];
@@ -55,26 +54,70 @@ total_block_num = str2num(cell2mat(strcat(app_data_string(9),app_data_string(10)
 
 switch exp_num
     case 1 %hi5 full-assisted target tracking
-        if trial_num ~= 0
-            while trial_num ~= 0
-                [exp_num, trial_num, traj] = read(u4,1,'string');
-                hi5_FA_traj = [hi5_FA_traj traj];
-                encoder = Motor1.ActualPosition;
-                encoder_array = [encoder_array encoder];
+        %hi5 initialization
+        Motor1 = Epos4(0,0);
+        Motor1.ClearErrorState;
+        Motor1.DisableNode;
+        Motor1.SetOperationMode( OperationModes.CurrentMode );
+        Motor1.EnableNode;
+        Motor1.ClearErrorState;
+
+        Zero_position = Motor1.ActualPosition;
+        
+        hi5Target_fullAssisted={};%cell aray for positional data
+        hi5WristPos={};%cell aray for positional data
+        hi5TargetPos={};
+        target_traj_array = [];
+        subject_traj_array = [];
+        
+        trial_num = 1;
+        while(trial_num <= total_trial_num)
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+            while (clockCurrent < clockStart + trial_length)
+                c = clock;
+                clockCurrent = c(4)*3600+c(5)*60+c(6);
+                sinTime = clockCurrent - clockStart;
+                target_traj = 2*18.51*(sin(sinTime*pi/1.547)*sin(sinTime*pi/2.875));
+                
+                subject_traj = Motor1.ActualPosition;
+                ErrorSample = sqrt((target_traj-subject_traj)^2);
+                Error_array = [Error_array ErrorSample];
+                Error = mean(Error_array);
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(sinTime, -5)];
+                disp(data_box);
+                for i = 1:(length(data_box))
+                    data_string = [data_string uniform_data(data_box(i))];
+                end
+                write(u2,data_string,"string","LocalHost",4000);
+                data_string = [];
+                target_traj_array = [target_traj_array target_traj];
+                subject_traj_array = [subject_traj_array subject_traj];
             end
-        elseif trial_num == 0
-            full_assisted_name = strcat('trial',num2str(trial_num));
-            hi5Target_FA_wristPos.(full_assisted_name) = encoder_array;
-            hi5Target_FA_targetPos.(full_assisted_name) = hi5_FA_traj;
-            hi5_FA_traj = [];
-            encoder_array = [];
+            trial_name = strcat('trial',num2str(trial_num));
+            hi5WristPos.(trial_name) = force_array;
+            hi5TargetPos.(trial_name) = force_target_array;
+            force_target_array = [];
+            force_array = [];
+            disp(trial_num);
+            trial_num = trial_num+1;
+            disp('end of trial');
+            pause(5);% time for ready count down in AppDesigner
         end
+        hi5Target_fullAssisted.hi5WristPos = hi5WristPos;
+        hi5Target_fullAssisted.hi5TargetPos = hi5TargetPos;
+        save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
+        
+        
     case 2 %hi5 semi-assisted target tracking
     case 3 %hi5 zero-assisted target tracking track
     case 4 %hi5 position track
     case 5 %torque stablization
     case 6 %grip tracking
         disp('Task: grip tracking')
+        force_array = [];
+        force_target_array = [];
         trial_num = 1;
         gripTrack = {};
         gripforce = {};
@@ -121,6 +164,8 @@ switch exp_num
         
     case 7 %grip force maintain
         disp('Task: grip force maintain')
+        force_array = [];
+        force_target_array = [];
         block_num = 1;
         gripForceMaintain = {};
         gripforce = {};
