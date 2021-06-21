@@ -43,8 +43,8 @@ switch exp_num
         % PID variables
         currentMaxP = 10000;
         currentMaxN = -10000;
-        KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
-        DW = 0*6400/90;
+        KW = 4*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
+        DW = 2*6400/90;
         filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
         posErrorPrev = 0;
         posErrorDiff = 0;
@@ -56,10 +56,12 @@ switch exp_num
         hi5TargetPos = {};
         hi5Velocity = {};
         hi5Current = {};
+        hi5Error = {};
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        error_array = [];
         
         trial_num = 1;
         while(trial_num <= total_trial_num)
@@ -104,6 +106,7 @@ switch exp_num
                 end
                 write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
+                error_array = [error_array Error];
                 velocity = Motor1.ActualVelocity;
                 velocity_array = [velocity_array velocity];
                 motor_current = Motor1.ActualCurrent;
@@ -117,8 +120,12 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
             hi5Velocity.(trial_name) = velocity_array;
             hi5Current.(trial_name) = current_array;
+            hi5Error.(trial_name) = error_array;
             target_traj_array = [];
             subject_traj_array = [];
+            velocity_array = [];
+            current_array = [];
+            error_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
@@ -128,6 +135,7 @@ switch exp_num
         hi5Target_fullAssisted.hi5TargetPos = hi5TargetPos;
         hi5Target_fullAssisted.hi5Velocity = hi5Velocity;
         hi5Target_fullAssisted.hi5Current = hi5Current;
+        hi5Target_fullAssisted.hi5Error = hi5Error;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
         
 %------------------------Semi-assisted target tracking---------------------
@@ -154,10 +162,12 @@ switch exp_num
         hi5TargetPos = {};
         hi5Velocity = {};
         hi5Current = {};
+        hi5Error = {};
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        error_array = [];
         
         trial_num = 1;
         while(trial_num <= total_trial_num)
@@ -198,6 +208,7 @@ switch exp_num
                 end
                 write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
+                error_array = [error_array Error];
                 velocity = Motor1.ActualVelocity;
                 velocity_array = [velocity_array velocity];
                 motor_current = Motor1.ActualCurrent;
@@ -211,8 +222,12 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
             hi5Velocity.(trial_name) = velocity_array;
             hi5Current.(trial_name) = current_array;
+            hi5Error.(trial_name) = error_array;
             target_traj_array = [];
             subject_traj_array = [];
+            velocity_array = [];
+            current_array = [];
+            error_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
@@ -222,6 +237,7 @@ switch exp_num
         hi5Target_semiAssisted.hi5TargetPos = hi5TargetPos;
         hi5Target_semiAssisted.hi5Velocity = hi5Velocity;
         hi5Target_semiAssisted.hi5Current = hi5Current;
+        hi5Target_semiAssisted.hi5Error = hi5Error;
         save ('hi5Target_semiAssisted.mat','hi5Target_semiAssisted');        
         
 %------------------------Zero-assisted target tracking---------------------
@@ -241,10 +257,12 @@ switch exp_num
         hi5TargetPos = {};
         hi5Velocity = {};
         hi5Current = {};
+        hi5Error = {};
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        error_array = [];
         
         trial_num = 1;
         while(trial_num <= total_trial_num)
@@ -272,6 +290,7 @@ switch exp_num
                 end
                 write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
+                error_array = [error_array Error];
                 velocity = Motor1.ActualVelocity;
                 velocity_array = [velocity_array velocity];
                 motor_current = Motor1.ActualCurrent;
@@ -284,8 +303,12 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
             hi5Velocity.(trial_name) = velocity_array;
             hi5Current.(trial_name) = current_array;
+            hi5Error.(trial_name) = error_array;
             target_traj_array = [];
             subject_traj_array = [];
+            velocity_array = [];
+            current_array = [];
+            error_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
@@ -295,6 +318,7 @@ switch exp_num
         hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
         hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
         hi5Target_zeroAssisted.hi5Current = hi5Current;
+        hi5Target_zeroAssisted.hi5Error = hi5Error;
         save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
         
         
@@ -315,12 +339,91 @@ switch exp_num
         hi5TargetPos = {};
         hi5Velocity = {};
         hi5Current = {};
-        target_traj_array = [];
+        target_pos_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        position_array = [];
         
-        trial_num = 1;
+        Error = 0;
+        posFlag = 0;
+        trial_index = 1;
+
+        
+        block_num = 1;
+        while(block_num <= total_block_num)
+            trial_num = 1;
+            for i =1:1:total_trial_num/8 
+                position_array = [position_array 40 20 -10 -20];
+            end
+            while(trial_num <= total_trial_num)
+                c = clock;
+                clockStart = c(4)*3600+c(5)*60+c(6);
+                clockCurrent = clockStart;
+                executed = 0;
+                while (clockCurrent < clockStart + trial_length)
+                    
+                    if posFlag == 0 && executed ==0
+                        index = randi(size(position_array));
+                        target_pos = position_array(index);
+                        position_array(index) = [];
+                        executed = 1;
+                    elseif posFlag == 1
+                        target_pos = 0;
+                    end
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    elapsed_time = clockCurrent - clockStart;
+
+                    % subject position
+                    subject_current_pos = Motor1.ActualPosition;
+                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+
+                    data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                    disp(data_box);
+                    for i = 1:(length(data_box))
+                        data_string = [data_string uniform_data(data_box(i))];
+                    end
+                    write(u2,data_string,"string","LocalHost",4000);
+                    data_string = [];
+                    velocity = Motor1.ActualVelocity;
+                    velocity_array = [velocity_array velocity];
+                    motor_current = Motor1.ActualCurrent;
+                    current_array = [current_array motor_current];
+                    target_pos_array = [target_pos_array target_pos];
+                    subject_traj_array = [subject_traj_array subject_traj];
+                end
+                posFlag = ~posFlag;
+                if block_num == 1
+                    trial_name = strcat('Slow_trial',num2str(trial_index));
+                elseif block_num == 2
+                    trial_name = strcat('Fast_trial',num2str(trial_index));
+                else
+                    trial_name = strcat('trial',num2str(trial_index));
+                end
+                
+                hi5WristPos.(trial_name) = subject_traj_array;
+                hi5TargetPos.(trial_name) = target_pos_array;
+                hi5Velocity.(trial_name) = velocity_array;
+                hi5Current.(trial_name) = current_array;
+                target_pos_array = [];
+                subject_traj_array = [];
+                velocity_array = [];
+                current_array = [];
+                disp(trial_num);
+                trial_num = trial_num + 1;
+                trial_index = trial_index + 1;
+                disp('end of trial');
+            end
+            block_num = block_num + 1;
+            disp(['Block number: ', num2str(block_num)]);
+            pause(5);% time for ready count down in AppDesigner
+        end
+        hi5Position_Track.hi5WristPos = hi5WristPos;
+        hi5Position_Track.hi5TargetPos = hi5TargetPos;
+        hi5Position_Track.hi5Velocity = hi5Velocity;
+        hi5Position_Track.hi5Current = hi5Current;
+        save ('hi5Position_Track.mat','hi5Position_Track');
         
         
 %------------------------HI5 torque stablization---------------------------
@@ -448,8 +551,10 @@ switch exp_num
                 hi5TargetPos.(trial_name) = target_strength_array;
                 hi5Velocity.(trial_name) = velocity_array;
                 hi5Current.(trial_name) = current_array;
-                target_traj_array = [];
+                target_strength_array = [];
                 subject_traj_array = [];
+                velocity_array = [];
+                current_array = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
                 disp('end of trial');
@@ -470,10 +575,12 @@ switch exp_num
         disp('Task: grip tracking')
         force_array = [];
         force_target_array = [];
+        error_array = [];
         trial_num = 1;
         gripTrack = {};
         gripforce = {};
         gripforce_target = {};
+        gripforce_error = {};
         
         while(trial_num <= total_trial_num)
             c = clock;
@@ -490,21 +597,24 @@ switch exp_num
                 ErrorSample = sqrt((force_target-force)^2);
                 Error_array = [Error_array ErrorSample];
                 Error = mean(Error_array);
-                data_box = [roundn(force_target,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                data_box = [roundn(force_target,-5) roundn(force_display,-7) roundn(Error,-5) roundn(elapsed_time, -5)];
                 disp(data_box);
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
                 end
                 write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
+                error_array = [error_array Error];
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
             end
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
+            gripforce_error.(force_name) = error_array;
             force_target_array = [];
             force_array = [];
+            error_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
@@ -512,6 +622,7 @@ switch exp_num
         end
         gripTrack.gripForce = gripforce;
         gripTrack.gripForceTarget = gripforce_target;
+        gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
         
 %------------------------Grip force maintain-------------------------------
@@ -549,7 +660,7 @@ switch exp_num
                     force = GetForce();
                     elapsed_time = clockCurrent - clockStart;
                     force_display = force;
-                    data_box = [roundn(strength,-5) roundn(force_display,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                    data_box = [roundn(strength,-5) roundn(force_display,-7) roundn(Error,-5) roundn(elapsed_time, -5)];
                     disp(data_box);
                     for i = 1:(length(data_box))
                         data_string = [data_string uniform_data(data_box(i))];
