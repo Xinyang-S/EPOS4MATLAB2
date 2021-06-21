@@ -15,7 +15,7 @@ hi5Target_ZA_targetPos = {};
 hi5Position = {};
 
 %% Run Python Code Here to activate Grip sensor
-system('python Force_Output.py');
+% StartGripSensor()
 
 %% 
 while(1)
@@ -51,6 +51,8 @@ switch exp_num
         KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
         DW = 0*6400/90;
         filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
+        posErrorPrev = 0;
+        posErrorDiff = 0;
         
         Zero_position = Motor1.ActualPosition;
         
@@ -342,7 +344,7 @@ switch exp_num
         hi5TargetPos = {};
         hi5Velocity = {};
         hi5Current = {};
-        target_traj_array = [];
+        target_strength_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
@@ -375,7 +377,7 @@ switch exp_num
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     elapsed_time = clockCurrent - clockStart;
                     
-                    if (clockCurrent > clockStart + 4)
+                    if (elapsed_time > 4)
                         strength = 0;
                     end
                     
@@ -385,43 +387,43 @@ switch exp_num
                             current = safetyCheck(current);
                             Motor1.MotionWithCurrent(current);
                         case 1
-                            if (clockStart > clockStartPrev+3.5)
+                            if (elapsed_time > 3.5)
                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0.5)
                                 current = -2000;
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0)
                                 current=-2000*(2*(elapsed_time));
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             end
                         case 2
-                            if (clockStart > clockStartPrev+3.5)
+                            if (elapsed_time > 3.5)
                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0.5)
                                 current = -3000;
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0)
                                 current=-3000*(2*(elapsed_time));
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
                             end
                         case 3
-                            if (clockStart > clockStartPrev+3.5)
+                            if (elapsed_time > 3.5)
                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0.5)
                                 current = -4000;
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
-                            elseif (clockStart > clockStartPrev+0.5)
+                            elseif (elapsed_time > 0)
                                 current=-4000*(2*(elapsed_time));
                                 current = safetyCheck(current);
                                 Motor1.MotionWithCurrent(current);
@@ -442,19 +444,19 @@ switch exp_num
                     velocity_array = [velocity_array velocity];
                     motor_current = Motor1.ActualCurrent;
                     current_array = [current_array motor_current];
-                    target_traj_array = [target_traj_array target_traj];
+                    target_strength_array = [target_strength_array strength];
                     subject_traj_array = [subject_traj_array subject_traj];
                 end
                 trial_name = strcat('trial',num2str(trial_num));
                 hi5WristPos.(trial_name) = subject_traj_array;
-                hi5TargetPos.(trial_name) = target_traj_array;
+                hi5TargetPos.(trial_name) = target_strength_array;
                 hi5Velocity.(trial_name) = velocity_array;
                 hi5Current.(trial_name) = current_array;
                 target_traj_array = [];
                 subject_traj_array = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
-                disp(['end of trial']);
+                disp('end of trial');
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
@@ -568,7 +570,7 @@ switch exp_num
                 force_array = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
-                disp(['end of trial']);
+                disp('end of trial');
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);

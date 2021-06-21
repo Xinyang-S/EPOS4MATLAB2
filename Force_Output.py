@@ -11,7 +11,7 @@ sensors = device.get_enabled_sensors()
 i = 1
 while i:
     device.read()
-    print(sensors[0].values[-1])
+    #print(sensors[0].values[-1])
     f= open("Force.txt","w+")
     #if device.read():
         #print(sensors[0].values[-1])
