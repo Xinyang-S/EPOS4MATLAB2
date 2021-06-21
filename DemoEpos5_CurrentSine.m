@@ -9,10 +9,10 @@ clc
 clear
 
 %variables 
-hold = 3;
+hold = 10;
 currentAmp = 2500; %in mA
-currentMaxP = 20000; %1560mNm or 10,500mA 
-currentMaxN = -20000;
+currentMaxP = 12500; %1560mNm or 10,500mA 
+currentMaxN = -12500;
 
 %initialize
 Motor1 = Epos4(0,0);
@@ -30,8 +30,7 @@ data = zeros(1,2);
 while (clockStart < clockStartPrev + hold)
     c = clock;
     clockStart = c(4)*3600+c(5)*60+c(6);
-    current = -15000;
-    %current = currentAmp*sin(clockStart-clockStartPrev);
+    current = currentAmp*sin(clockStart-clockStartPrev);
     if (current > currentMaxP)
            current = currentMaxP;
            disp('Limit Plus!')
