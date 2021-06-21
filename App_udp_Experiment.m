@@ -322,6 +322,7 @@ switch exp_num
         
         trial_num = 1;
         
+        
 %------------------------HI5 torque stablization---------------------------
     case 5 %torque stablization
         %hi5 initialization
