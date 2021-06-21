@@ -1,19 +1,27 @@
+import struct
+
 from godirect import GoDirect
 from datetime import datetime
 import logging
 import csv
-
+import socket
+import sockets
 logging.basicConfig()
 
-# The first USB device found will be used. If no USB devices are found, then 
+# The first USB device found will be used. If no USB devices are found, then
 # the BLE device with the strongest signal over -100dB is used.
 # Note that you can choose to enable USB, BLE, or both. By default both will be enabled.
 godirect = GoDirect(use_ble=True, use_usb=True)
 device = godirect.get_device(threshold=-100)
 output = []
-# Once a device is found or selected it must be opened. By default, only information will be 
-# gathered on Open. To automatically enable the default sensors and start measurements send 
-# auto_start=True and skip to get enabled sensors.
+
+godirect.quit()
+
+my_socket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+my_socket.connect(('127.0.0.1', 1249))
+#MESSAGE= b'5.99785'
+
+
 
 if device != None and device.open(auto_start=False):
     device.start(period=10)
@@ -35,12 +43,15 @@ if device != None and device.open(auto_start=False):
                 for i in sensor.values:
                     #print(str(sensor.values[i]))
                     print(i)
+                    MESSAGE = struct.pack('!d',i)
+                    my_socket.sendto(MESSAGE, ('127.0.0.1', 1249))
                     output.append(i)
-                    f = open("Force.txt", "w+")
+                    '''f = open("Force.txt", "w+")
                     f.write(str(i))
-                    f.close()
-            sensor.clear()
+                    f.close()'''
+                sensor.clear()
             j+=1
+    my_socket.close
     EndTime = datetime.now()
     device.stop()
     device.close()
@@ -49,8 +60,4 @@ if device != None and device.open(auto_start=False):
 else:
     print("Go Direct device not found/opened")
 
-godirect.quit()
 
-'''with open('Force_CSV.csv', mode='w') as Force_CSV:
-    Force_CSV = csv.writer(Force_CSV, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-    Force_CSV.writerow([i])'''

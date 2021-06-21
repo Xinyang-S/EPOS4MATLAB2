@@ -572,10 +572,13 @@ switch exp_num
         
 %------------------------Grip target tracking------------------------------
     case 6 %grip tracking
+        total_trial_num = 2;
+        trial_length = 10;
         disp('Task: grip tracking')
         force_array = [];
         force_target_array = [];
-        error_array = [];
+        Error_array = [];
+        data_string = [];
         trial_num = 1;
         gripTrack = {};
         gripforce = {};
@@ -602,7 +605,7 @@ switch exp_num
                 for i = 1:(length(data_box))
                     data_string = [data_string uniform_data(data_box(i))];
                 end
-                write(u2,data_string,"string","LocalHost",4000);
+                %write(u2,data_string,"string","LocalHost",4000);
                 data_string = [];
                 error_array = [error_array Error];
                 force_array = [force_array force];
