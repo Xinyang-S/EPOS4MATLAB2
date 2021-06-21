@@ -7,11 +7,6 @@ data_string = [];
 Error_array = [];
 
 hi5Torque = {};
-
-
-hi5Target_zeroAssisted = {};
-hi5Target_ZA_wristPos = {};
-hi5Target_ZA_targetPos = {};
 hi5Position = {};
 
 %% Run Python Code Here to activate Grip sensor
