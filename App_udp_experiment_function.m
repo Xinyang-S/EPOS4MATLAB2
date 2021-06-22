@@ -1,3 +1,5 @@
+function App_udp_experiment_function()
+
 %% initialize UPD ports and arrays
 clear u1 u2 u3 u4 u_force
 u4 = udpport("LocalPort",1000,'TimeOut',100);
@@ -702,5 +704,6 @@ switch exp_num
     case 9 % save all the data in workspace
         
         
+end
 end
 end

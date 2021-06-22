@@ -32,25 +32,22 @@ if device != None and device.open(auto_start=False):
     sensors = device.get_enabled_sensors()
     j = 1
     startTime = datetime.now()
-    while j<100:
+    while 1:
         if device.read():
-
             for sensor in sensors:
+                #Time1 = datetime.now()
                 # The sensor.values call may read one sensor value, or multiple sensor values (if fast sampling)
-                '''print(str(sensor.values))
-                output.append(sensor.values)
-                sensor.clear()'''
                 for i in sensor.values:
                     #print(str(sensor.values[i]))
                     print(i)
-                    MESSAGE = struct.pack('!d',i)
-                    my_socket.sendto(MESSAGE, ('127.0.0.1', 1249))
+                    MESSAGE = struct.pack('f', i)
+                    #my_socket.sendto(MESSAGE, ('146.169.185.235', 1250))
+                    my_socket.sendto(MESSAGE, ('127.0.0.1', 1250))
                     output.append(i)
-                    '''f = open("Force.txt", "w+")
-                    f.write(str(i))
-                    f.close()'''
                 sensor.clear()
-            j+=1
+                #Time2 = datetime.now()
+                #print(Time2 - Time1)
+            j += 1
     my_socket.close
     EndTime = datetime.now()
     device.stop()

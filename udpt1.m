@@ -3,7 +3,7 @@ u3 = udpport("LocalPort",2000);
 u1 = udpport("LocalPort",4000); % open udp for FES pw from simulink, clear port if error
 f2 = [];
 f1 = 0;
-write(u3, strcat(num2str(6), '0','0',num2str(1),'0','0','2'), 'string','LocalHost', 1000)
+%write(u3, strcat(num2str(6), '0','0',num2str(1),'0','0','2'), 'string','LocalHost', 1000)
         
 while(true)
     
