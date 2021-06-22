@@ -613,7 +613,6 @@ switch exp_num
                 elapsed_time = [];
                 
                 write(u2,data_box,"double","LocalHost",4000);
-                
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
                 force_target = [];
@@ -705,7 +704,18 @@ switch exp_num
         
 %------------------------Combine all the Data------------------------------
     case 9 % save all the data in workspace
-        
+        load('hi5Target_fullAssisted.mat');
+        load('hi5Target_semiAssisted.mat');
+        load('hi5Target_zeroAssisted.mat');
+        load('hi5Position.mat');
+        load('hi5Torque_Stablization.mat');
+        load('gripTrack.mat');
+        load('gripForceMaintain.mat');
+        load('username.mat');
+        dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
+        expName=strcat('experimentData_',Username,'_',dt,'.mat');
+        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Positioning','hi5Torque_Stablization','gripTrack','gripForceMaintain')
+        disp(strcat('Data was saved succesfully! The file name is'," ",expName));
         
 end
 end
