@@ -10,16 +10,18 @@ while(true)
 %     write(u3,'asdfasdf',"string","LocalHost",1000);
 %     f1 = read(u1,1,"double");  % ensure buffer is multiple of number of electrodes used 
 %     f2 = [f2 f1];
-script_data = read(u1,24,"string")  % ensure buffer is multiple of number of electrodes used 
-script_data = split(script_data,'');
-f_targ = str2num(strcat(script_data(2),script_data(3),...
-    script_data(4),script_data(5),script_data(6),script_data(7),script_data(8),script_data(9))) %force target
-f = str2num(strcat(script_data(10),script_data(11),script_data(12),...
-    script_data(13),script_data(14),script_data(15),script_data(16),...
-    script_data(17))) %force of the human
-error = str2num(strcat(script_data(18),script_data(19),script_data(20),...
-    script_data(21),script_data(22),script_data(23),script_data(24),...
-    script_data(25)))%error between target force and human force
+        flush(u1);
+        script_data = read(u1,1,"string");  % ensure buffer is multiple of number of electrodes used 
+        script_data = split(script_data,'!');
+        app.Label.Text = 'split';
+        data_box = str2double(script_data(strlength(script_data)>0));
+        app.Label.Text = num2str(data_box(10));
+        f_targ = data_box(1:10);
+        app.Label.Text = num2str(f_targ(10));
+        f = data_box(11:20);
+        Error = data_box(21);
+        Elapsed_Time = data_box(22:31);
+        app.Label.Text = num2str(Elapsed_Time(10));
 end
 
     

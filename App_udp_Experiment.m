@@ -579,7 +579,9 @@ switch exp_num
         force_array = [];
         force_target_array = [];
         Error_array = [];
-        data_string = [];
+        %data_string = '';
+        elapsed_time = zeros(1,10);
+        force_target = [];
         trial_num = 1;
         gripTrack = {};
         gripforce = {};
@@ -594,31 +596,30 @@ switch exp_num
             Error = 0;
             while (clockCurrent < clockStart + trial_length)
                 
-                c = clock;
-                clockCurrent = c(4)*3600+c(5)*60+c(6);
-                elapsed_time = clockCurrent - clockStart;
-                force_target = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
+                k = 1;
+                while k <= 10
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    elapsed_time(k) = clockCurrent - clockStart;
+                    k = k+1;
+                end
+                force_target =2.*18.51.*(sin(elapsed_time.*pi/1.547).*sin(elapsed_time.*pi/2.875));
                 flush(u_force)
-                force = read(u_force,1,'single');
-                
-                ErrorSample = sqrt((force_target-force)^2);
+                force = read(u_force,10,'single');
+                ErrorSample = sqrt((force_target-force).^2);
                 Error_array = [Error_array ErrorSample];
                 Error = mean(Error_array);
                 data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                disp(data_box);
+                elapsed_time = [];
                 
-                for i = 1:(length(data_box))
-                    data_string = [data_string uniform_data(data_box(i))];
-                end
-                tic
-                write(u2,data_string,"string","LocalHost",4000);
-                toc
-                data_string = [];
+                write(u2,data_box,"double","LocalHost",4000);
                 
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
+                force_target = [];
                 
             end
+            
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
@@ -646,11 +647,19 @@ switch exp_num
         gripforce = {};
         gripforce_target = {};
         Error = 0;
+        elapsed_time = zeros(1,10);
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
+                k = 1;
+                while k <= 10
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    elapsed_time(k) = clockCurrent - clockStart;
+                    k = k+1;
+                end
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
@@ -673,11 +682,7 @@ switch exp_num
                     elapsed_time = clockCurrent - clockStart;
                     data_box = [roundn(strength,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                     disp(data_box);
-                    for i = 1:(length(data_box))
-                        data_string = [data_string uniform_data(data_box(i))];
-                    end
-                    write(u2,data_string,"string","LocalHost",4000);
-                    data_string = [];
+                    write(u2,data_box,"double","LocalHost",4000);
                     force_array = [force_array force];
                     force_target_array = [force_target_array strength];
                 end
