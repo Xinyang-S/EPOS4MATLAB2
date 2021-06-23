@@ -626,7 +626,6 @@ switch exp_num
         force_array = [];
         force_target_array = [];
         Error_array = [];
-        %data_string = '';
         elapsed_time = zeros(1,10);
         force_target = [];
         trial_num = 1;
