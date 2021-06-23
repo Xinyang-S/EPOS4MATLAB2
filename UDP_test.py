@@ -12,7 +12,7 @@ import cv2
 output = []
 
 my_socket= socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-my_socket.connect(('127.0.0.1', 1250))
+my_socket.connect(('127.0.0.1', 1249))
 #MESSAGE= b'5.99785'
 force_single = [1.23112312, 123.123123212312, -2.1231231213, 23.232342452, 34.3243953456]
 force_double = [1.2311231234965874948345, 123.1231232123123469048539240, -2.123123121334594850394, 23.232342452304958034, 34.32439520349850393456, 56.232323045984302944354]
@@ -34,7 +34,8 @@ while 1:
         #print(str(sensor.values[i]))
         print(i)
         MESSAGE = struct.pack('f', i)
-        my_socket.sendto(MESSAGE, ('146.169.185.235', 1250))
+        #my_socket.sendto(MESSAGE, ('146.169.185.235', 1250))
+        my_socket.sendto(MESSAGE, ('127.0.0.1', 1250))
         output.append(i)
         '''f = open("Force.txt", "w+")
         f.write(str(i))
