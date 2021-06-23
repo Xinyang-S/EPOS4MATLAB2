@@ -7,8 +7,8 @@ c=clock();
 clockStart = c(4)*3600 + c(5)*60 + c(6);
 freq_traj = 1;
 port = 5566;
-ur = udpport('LocalPort', port+2);
-uw = udp('LocalHost', port+1);
+ur = udpport('LocalPort', port+2,'timeout',100);
+uw = udp('LocalHost', port+1,'timeout',100);
 fopen(uw);
 c = clock(); %frequency of desired trajectory
 amp_traj = 300; %amplitude of desired trajectory
@@ -19,7 +19,7 @@ while(1)
     c = clock();
     clockNew = c(4)*3600 + c(5)*60 + c(6);
     current = amp_traj*sin((clockNew-clockStart)*freq_traj)
-
+    current = safetyCheck(current);
     dataW =  typecast(single([0 current]), 'int8');
     fwrite(uw, dataW, 'int8');
     pause(0.001);

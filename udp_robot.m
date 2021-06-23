@@ -5,8 +5,8 @@
 clear ur;
 %fclose(uw);
 port = 5566;
-ur = udpport('LocalPort', port+1);
-uw = udp('LocalHost', port+2);
+ur = udpport('LocalPort', port+1,'timeout',0.01);
+uw = udp('LocalHost', port+2,'timeout',100);
 fopen(uw);
 
 % initialize motor
@@ -32,11 +32,15 @@ while(1)
     pause(0.001);
     
     %read data
-    dataR = int8(read(ur,8, 'int8'));
-    dataR1 = typecast(dataR, 'single')
-    if (dataR1(1)==0)
-    else
-        Motor1.MotionWithCurrent(dataR1(2));
+    try
+        dataR = int8(read(ur,8, 'int8'));
+        dataR1 = typecast(dataR, 'single')
+        if (dataR1(1)==0)
+        else
+            Motor1.MotionWithCurrent(dataR1(2));
+        end
+    catch
+        continue
     end
         toc
 end

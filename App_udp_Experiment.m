@@ -4,7 +4,7 @@ clear u1 u2 u3 u4 u_force
 u4 = udpport("LocalPort",1000,'TimeOut',100);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
-u2 = udp("LocalHost",4000);
+u2 = udp("LocalHost",3000);
 
 data_string = [];
 Error_array = [];
@@ -155,19 +155,27 @@ switch exp_num
 
 %------------------------Full-assisted target tracking---------------------
     case 1 %hi5 full-assisted target tracking
-        
+        clear ur;
+        %fclose(uw);
+        c=clock();
+        clockStart = c(4)*3600 + c(5)*60 + c(6);
+        port = 5566;
+        ur = udpport('LocalPort', port+2);
+        uw = udp('LocalHost', port+1);
+        fopen(uw);
+        fopen(u2);
         % PID variables
         currentMaxP = 10000;
         currentMaxN = -10000;
-        KW = 4*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
-        DW = 2*6400/90;
+        KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
+        DW = 0*6400/90;
         filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
         posErrorPrev = 0;
         posErrorDiff = 0;
         
 
         %read data from robot matlab ( encoder )
-        flush(ur);
+%         flush(ur);
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
         
@@ -187,23 +195,27 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        currentPrev=0;
+        Error = 0;
         
         trial_num = 1;
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
+            flush(ur);
             while (clockCurrent < clockStart + trial_length)
                 k = 1;
+                
                 while k <= 10
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     % subject position
-                    subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+%                     subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
                     dataR = int8(read(ur, 4, 'int8'));
-                    dataR1 = typecast(dataR, 'single')
+                    subject_current_pos = typecast(dataR, 'single');
                     
-                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                    subject_traj = -(subject_current_pos - Zero_position).*90/6400;
                     subject_traj_10_array(k) = subject_traj;
                     
                     % target position
@@ -213,9 +225,9 @@ switch exp_num
                     target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
                     target_traj_10_array(k) = target_traj;
                     
-                    ErrorSample = sqrt((target_traj-subject_traj)^2);
-                    Error_array = [Error_array ErrorSample];
-                    Error = mean(Error_array);
+%                     ErrorSample = sqrt((target_traj-subject_traj)^2);
+%                     Error_array = [Error_array ErrorSample];
+%                     Error = mean(Error_array);
 
                     %control Hi5 - stiffness
                     position_Error = (- subject_traj) - target_traj;
@@ -231,29 +243,41 @@ switch exp_num
                         disp('Wall Broke!')
                     else
                         current = safetyCheck(current);
-                        Motor1.MotionWithCurrent(current);
+                        if current == currentPrev
+                            dataW =  typecast(single([0 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+                        else
+                            dataW =  typecast(single([1 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+%                         Motor1.MotionWithCurrent(current);
+                        end
                     end
                     
-                    velocity_10_array(k) = Motor1.ActualVelocity;
-                    current_10_array(k) = Motor1.ActualCurrent;
+%                     velocity_10_array(k) = Motor1.ActualVelocity;
+                    current_10_array(k) = current;
                     k = k+1;
+                    currentPrev=current;
                 
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                newV = typecast(single(data_box), 'int8')
+                fwrite(u2, newV, 'int8')
+                disp('Wrote!')
 
-                write(u2,data_box,"double","LocalHost",4000);
-
-                velocity_array = [velocity_array velocity_10_array];
+%                 velocity_array = [velocity_array velocity_10_array];
                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
-            Motor1.MotionWithCurrent(0);
+%             Motor1.MotionWithCurrent(0);
+            dataW =  typecast(single([1 0]), 'int8');
+            fwrite(uw, dataW, 'int8');
+            
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
-            hi5Velocity.(trial_name) = velocity_array;
+%             hi5Velocity.(trial_name) = velocity_array;
             hi5Current.(trial_name) = current_array;
             hi5Error.(trial_name) = Error_array;
             target_traj_array = [];
@@ -268,10 +292,12 @@ switch exp_num
         end
         hi5Target_fullAssisted.hi5WristPos = hi5WristPos;
         hi5Target_fullAssisted.hi5TargetPos = hi5TargetPos;
-        hi5Target_fullAssisted.hi5Velocity = hi5Velocity;
+%         hi5Target_fullAssisted.hi5Velocity = hi5Velocity;
         hi5Target_fullAssisted.hi5Current = hi5Current;
         hi5Target_fullAssisted.hi5Error = hi5Error;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
+        fclose(u2);
+        fclose(uw);
 %------------------------Semi-assisted target tracking---------------------
     case 2 %hi5 semi-assisted target tracking
         %hi5 initialization
