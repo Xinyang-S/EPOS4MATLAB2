@@ -2,7 +2,7 @@ clear u_force
 clear u_py
 %addpath C:\Users\96387\AppData\Roaming\MathWorks\MATLAB Add-Ons\Functions\Matlab Python UDP Socket
 %u4 = udpport("LocalPort",1000,'TimeOut',100);
-u_force = udpport('LocalPort',1250);
+u_force = udpport('LocalPort',1262);
 %u_py = pyUDPsocket('LocalPort',1250)
 %u_force = udp('127.0.0.1',1249,'LocalPort',1250);
 
@@ -17,7 +17,7 @@ while Currenttime < starttime+10
     %flush(u_force)
     %app_data = read(u4,10,'string');
     tic
-    A = read(u_force,10,'single')
+    A = read(u_force,1,'single')
     %A = fscanf(u_force)
     toc
     A_array = [A_array A];

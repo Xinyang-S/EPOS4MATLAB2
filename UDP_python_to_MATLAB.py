@@ -24,7 +24,7 @@ my_socket.connect(('127.0.0.1', 1249))
 
 
 if device != None and device.open(auto_start=False):
-    device.start(period=10)
+    device.start(period=5)
 
     # You can select the specific sensors for data collection using device.enable_sensors().
     # Otherwise, the default sensors will be used when device.get_enabled_sensors() is called.
@@ -34,20 +34,22 @@ if device != None and device.open(auto_start=False):
     startTime = datetime.now()
     while 1:
         if device.read():
+            #Time1 = datetime.now()
+
             for sensor in sensors:
-                #Time1 = datetime.now()
                 # The sensor.values call may read one sensor value, or multiple sensor values (if fast sampling)
+
                 for i in sensor.values:
                     #print(str(sensor.values[i]))
-                    print(i)
+                    print (i)
                     MESSAGE = struct.pack('f', i)
                     #my_socket.sendto(MESSAGE, ('146.169.185.235', 1250))
-                    my_socket.sendto(MESSAGE, ('127.0.0.1', 1250))
+                    my_socket.sendto(MESSAGE, ('127.0.0.1', 1263))
                     output.append(i)
                 sensor.clear()
-                #Time2 = datetime.now()
-                #print(Time2 - Time1)
             j += 1
+            #Time2 = datetime.now()
+            #print(Time2 - Time1)
     my_socket.close
     EndTime = datetime.now()
     device.stop()

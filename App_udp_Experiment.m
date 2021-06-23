@@ -1,8 +1,10 @@
 %% initialize UPD ports and arrays
+%addpath 
 clear u1 u2 u3 u4 u_force
 u4 = udpport("LocalPort",1000,'TimeOut',100);
-u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
-u_force = udpport('LocalPort',1250);
+% u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
+u_force = udpport('LocalPort',1263);
+u2 = udp("LocalHost",3000);
 
 data_string = [];
 Error_array = [];
@@ -617,6 +619,7 @@ switch exp_num
         
 %------------------------Grip target tracking------------------------------
     case 6 %grip tracking
+        fopen(u2);
         total_trial_num = 2;
         trial_length = 10;
         disp('Task: grip tracking')
@@ -648,15 +651,18 @@ switch exp_num
                     k = k+1;
                 end
                 force_target =2.*18.51.*(sin(elapsed_time.*pi/1.547).*sin(elapsed_time.*pi/2.875));
-                flush(u_force)
+%                 flush(u_force)
                 force = read(u_force,10,'single');
-                ErrorSample = sqrt((force_target-force).^2);
-                Error_array = [Error_array ErrorSample];
-                Error = mean(Error_array);
+%                 ErrorSample = sqrt((force_target-force).^2);
+%                 Error_array = [Error_array ErrorSample];
+%                 Error = mean(Error_array);
                 data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+%                 disp(data_box);
                 elapsed_time = [];
                 
-                write(u2,data_box,"double","LocalHost",4000);
+                newV = typecast(single(data_box), 'int8')
+                fwrite(u2, newV, 'int8')
+%                 write(u2,data_box,"double","LocalHost",4000);
                 force_array = [force_array force];
                 force_target_array = [force_target_array force_target];
                 force_target = [];
@@ -679,9 +685,11 @@ switch exp_num
         gripTrack.gripForceTarget = gripforce_target;
         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
+        fclose(u2)
         
 %------------------------Grip force maintain-------------------------------
     case 7 %grip force maintain
+        fopen(u2);
         disp('Task: grip force maintain')
         force_array = [];
         force_target_array = [];
@@ -690,19 +698,11 @@ switch exp_num
         gripforce = {};
         gripforce_target = {};
         Error = 0;
-        elapsed_time = zeros(1,10);
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
-                k = 1;
-                while k <= 10
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    elapsed_time(k) = clockCurrent - clockStart;
-                    k = k+1;
-                end
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
@@ -720,14 +720,16 @@ switch exp_num
                     if (clockCurrent > clockStart + 3)
                         strength = 0;
                     end
-                    flush(u_force)
+                    
                     force = read(u_force,1,'single');
                     elapsed_time = clockCurrent - clockStart;
                     data_box = [roundn(strength,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                     disp(data_box);
-                    write(u2,data_box,"double","LocalHost",4000);
+                    newV = typecast(single(data_box), 'int8')
+                    fwrite(u2, newV, 'int8')
                     force_array = [force_array force];
                     force_target_array = [force_target_array strength];
+%                     pause(0.002)
                 end
                 force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;
@@ -745,6 +747,7 @@ switch exp_num
         gripForceMaintain.gripforce = gripforce;
         gripForceMaintain.gripforcetarget = gripforce_target;
         save ('gripForceMaintain.mat','gripForceMaintain');
+        fclose(u2)
         
 %------------------------Combine all the Data------------------------------
     case 9 % save all the data in workspace
