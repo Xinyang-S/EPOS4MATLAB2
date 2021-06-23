@@ -619,6 +619,7 @@ switch exp_num
         
 %------------------------Grip target tracking------------------------------
     case 6 %grip tracking
+        fclose(u2)
         fopen(u2);
         total_trial_num = 2;
         trial_length = 10;
@@ -637,7 +638,7 @@ switch exp_num
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
-            clockCurrent = clockStart;
+            clockCurrent = clockStart; 
             Error_array = [];
             Error = 0;
             while (clockCurrent < clockStart + trial_length)
@@ -688,6 +689,7 @@ switch exp_num
         
 %------------------------Grip force maintain-------------------------------
     case 7 %grip force maintain
+        fclose(u2)
         fopen(u2);
         disp('Task: grip force maintain')
         force_array = [];
