@@ -1,10 +1,14 @@
 %% initialize UPD ports and arrays
 %addpath 
-clear u1 u2 u3 u4 u_force
+clear u1 u2 u3 u4 u_force ur
 u4 = udpport("LocalPort",1000,'TimeOut',100);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
 u2 = udp("LocalHost",3000);
+
+port = 5566;
+ur = udpport('LocalPort', port+2);
+uw = udp('LocalHost', port+1);
 
 data_string = [];
 Error_array = [];
@@ -155,13 +159,7 @@ switch exp_num
 
 %------------------------Full-assisted target tracking---------------------
     case 1 %hi5 full-assisted target tracking
-        clear ur;
-        %fclose(uw);
-        c=clock();
-        clockStart = c(4)*3600 + c(5)*60 + c(6);
-        port = 5566;
-        ur = udpport('LocalPort', port+2);
-        uw = udp('LocalHost', port+1);
+        
         fopen(uw);
         fopen(u2);
         % PID variables
@@ -170,8 +168,7 @@ switch exp_num
         KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
         DW = 0*6400/90;
         filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
-        posErrorPrev = 0;
-        posErrorDiff = 0;
+
         
 
         %read data from robot matlab ( encoder )
@@ -204,6 +201,9 @@ switch exp_num
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
             flush(ur);
+            posErrorPrev = 0;
+            posErrorDiff = 0;
+%             pause(5);
             while (clockCurrent < clockStart + trial_length)
                 k = 1;
                 
@@ -288,7 +288,7 @@ switch exp_num
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
-            pause(5);% time for ready count down in AppDesigner
+            % time for ready count down in AppDesigner
         end
         hi5Target_fullAssisted.hi5WristPos = hi5WristPos;
         hi5Target_fullAssisted.hi5TargetPos = hi5TargetPos;
@@ -906,7 +906,33 @@ switch exp_num
         gripForceMaintain.gripforcetarget = gripforce_target;
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
+%------------------------Combine all the Data------------------------------
+    case 8
+        Motor1 = Epos4(0,0);
+        Motor1.ClearErrorState;
+        Motor1.DisableNode;
+        Motor1.SetOperationMode( OperationModes.CurrentMode );
+        Motor1.EnableNode;
+        Motor1.ClearErrorState;
         
+        Zero_position = Motor1.ActualPosition;
+        
+        hi5Torque_Stablization = {};%cell aray for positional data
+        hi5WristPos = {};%cell aray for positional data
+        hi5TargetPos = {};
+        hi5Velocity = {};
+        hi5Current = {};
+        target_strength_array = [];
+        subject_traj_array = [];
+        velocity_array = [];
+        current_array = [];
+        
+        c =clock;
+        CurrentTime = c(4)*3600 + c(5)*60 + c(6);
+        StartTime = CurrentTime;
+        while (CurrentTime < StartTime + 5)
+            
+        end
 %------------------------Combine all the Data------------------------------
     case 9 % save all the data in workspace
         load('hi5Target_fullAssisted.mat');
