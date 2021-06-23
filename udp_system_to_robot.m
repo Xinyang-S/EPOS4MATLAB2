@@ -3,13 +3,14 @@
 % write udp
 clear ur;
 %fclose(uw);
+c=clock();
+clockStart = c(4)*3600 + c(5)*60 + c(6);
+freq_traj = 1;
 port = 5566;
 ur = udpport('LocalPort', port+2);
 uw = udp('LocalHost', port+1);
 fopen(uw);
-c = clock();
-clockStart = c(4)*3600 + c(5)*60 + c(6);
-freq_traj = 1; %frequency of desired trajectory
+c = clock(); %frequency of desired trajectory
 amp_traj = 300; %amplitude of desired trajectory
 
 while(1)
