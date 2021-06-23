@@ -697,6 +697,8 @@ switch exp_num
         gripForceMaintain = {};
         gripforce = {};
         gripforce_target = {};
+        strength_10_array = zeros(1,10);
+        elapsed_time_10_array = zeros(1,10);
         Error = 0;
         trial_index = 1;
         while(block_num <= total_block_num)
@@ -721,14 +723,24 @@ switch exp_num
                         strength = 0;
                     end
                     
-                    force = read(u_force,1,'single');
-                    elapsed_time = clockCurrent - clockStart;
-                    data_box = [roundn(strength,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                    disp(data_box);
+                    force = read(u_force,10,'single');
+                    
+                    k = 1;
+                    while k <= 10
+                        
+                        elapsed_time = clockCurrent - clockStart;
+                        strength_10_array(k) = strength;
+                        elapsed_time_10_array(k) = elapsed_time;
+                        
+                        k = k+1;
+                    end
+                    
+                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+%                     disp(data_box);
                     newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
                     force_array = [force_array force];
-                    force_target_array = [force_target_array strength];
+                    force_target_array = [force_target_array strength_10_array];
 %                     pause(0.002)
                 end
                 force_name = strcat('trial',num2str(trial_index));
