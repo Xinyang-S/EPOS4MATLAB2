@@ -209,13 +209,8 @@ switch exp_num
         fclose(uw);
 %------------------------Semi-assisted target tracking---------------------
     case 2 %hi5 semi-assisted target tracking
-        %hi5 initialization
-        Motor1 = Epos4(0,0);
-        Motor1.ClearErrorState;
-        Motor1.DisableNode;
-        Motor1.SetOperationMode( OperationModes.CurrentMode );
-        Motor1.EnableNode;
-        Motor1.ClearErrorState;
+        fopen(uw);
+        fopen(u2);
         
         % PID variables
         currentMaxP = 10000;
@@ -223,8 +218,9 @@ switch exp_num
         KW = 2.17*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
         DW = 0*6400/90;
         posErrorDiff = 0;
-        
-        Zero_position = Motor1.ActualPosition;
+        flush(ur)
+        dataR = int8(read(ur, 4, 'int8'));
+        Zero_position = typecast(dataR, 'single');
         
         hi5Target_semiAssisted = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -242,9 +238,11 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         Error_array = [];
+        currentPrev=0;
         
         trial_num = 1;
         while(trial_num <= total_trial_num)
+            data_box=[];
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
@@ -254,7 +252,9 @@ switch exp_num
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     % subject position
-                    subject_current_pos = Motor1.ActualPosition;
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+                    
                     subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                     subject_traj_10_array(k) = subject_traj;
                     
@@ -279,24 +279,34 @@ switch exp_num
                         disp('Wall Broke!')
                     else
                         current = safetyCheck(current);
-                        Motor1.MotionWithCurrent(current);
+                        if current == currentPrev
+                            dataW =  typecast(single([0 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+                        else
+                            dataW =  typecast(single([1 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+%                         Motor1.MotionWithCurrent(current);
+                        end
                     end
                     
-                    velocity_10_array(k) = Motor1.ActualVelocity;
-                    current_10_array(k) = Motor1.ActualCurrent;
+%                     velocity_10_array(k) = Motor1.ActualVelocity;
+                    current_10_array(k) = current;
                     k = k+1;
+                    currentPrev=current;
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-
-                write(u2,data_box,"double","LocalHost",4000);
+                newV = typecast(single(data_box), 'int8')
+                fwrite(u2, newV, 'int8')
 
                 velocity_array = [velocity_array velocity_10_array];
                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
-            Motor1.MotionWithCurrent(0);
+            dataW =  typecast(single([1 0]), 'int8');
+            fwrite(uw, dataW, 'int8');
+            
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
@@ -318,19 +328,21 @@ switch exp_num
         hi5Target_semiAssisted.hi5Velocity = hi5Velocity;
         hi5Target_semiAssisted.hi5Current = hi5Current;
         hi5Target_semiAssisted.hi5Error = hi5Error;
-        save ('hi5Target_semiAssisted.mat','hi5Target_semiAssisted');        
+        save ('hi5Target_semiAssisted.mat','hi5Target_semiAssisted');
+        fclose(uw);
+        fclose(u2);
         
 %------------------------Zero-assisted target tracking---------------------
     case 3 %hi5 zero-assisted target tracking track
-        %hi5 initialization
-        Motor1 = Epos4(0,0);
-        Motor1.ClearErrorState;
-        Motor1.DisableNode;
-        Motor1.SetOperationMode( OperationModes.CurrentMode );
-        Motor1.EnableNode;
-        Motor1.ClearErrorState;
+        fopen(uw);
+        fopen(u2);
         
-        Zero_position = Motor1.ActualPosition;
+        flush(ur)
+        dataR = int8(read(ur, 4, 'int8'));
+        Zero_position = typecast(dataR, 'single');
+        
+        dataW =  typecast(single([1 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
         
         hi5Target_zeroAssisted = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -348,7 +360,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
-        
+        currentPrev=0;
         trial_num = 1;
         while(trial_num <= total_trial_num)
             c = clock;
@@ -360,7 +372,9 @@ switch exp_num
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     % subject position
-                    subject_current_pos = Motor1.ActualPosition;
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+                    
                     subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                     subject_traj_10_array(k) = subject_traj;
                     
@@ -375,20 +389,23 @@ switch exp_num
                     Error_array = [Error_array ErrorSample];
                     Error = mean(Error_array);
                     
-                    velocity_10_array(k) = Motor1.ActualVelocity;
-                    current_10_array(k) = Motor1.ActualCurrent;
+
+                    current_10_array(k) = 0;
                     k = k+1;
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                newV = typecast(single(data_box), 'int8')
+                fwrite(u2, newV, 'int8')
 
-                write(u2,data_box,"double","LocalHost",4000);
 
                 velocity_array = [velocity_array velocity_10_array];
                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
+            dataW =  typecast(single([1 0]), 'int8');
+            fwrite(uw, dataW, 'int8');
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
@@ -411,19 +428,21 @@ switch exp_num
         hi5Target_zeroAssisted.hi5Current = hi5Current;
         hi5Target_zeroAssisted.hi5Error = hi5Error;
         save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
+        fclose(u2)
+        fclose(uw)
         
         
 %--------------------------HI5 position track------------------------------
     case 4 %hi5 position track
-        %hi5 initialization
-        Motor1 = Epos4(0,0);
-        Motor1.ClearErrorState;
-        Motor1.DisableNode;
-        Motor1.SetOperationMode( OperationModes.CurrentMode );
-        Motor1.EnableNode;
-        Motor1.ClearErrorState;
+        fopen(uw);
+        fopen(u2);
         
-        Zero_position = Motor1.ActualPosition;
+        flush(ur)
+        dataR = int8(read(ur, 4, 'int8'));
+        Zero_position = typecast(dataR, 'single');
+        
+        dataW =  typecast(single([1 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
         
         hi5Position_Track = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -477,17 +496,20 @@ switch exp_num
                         elapsed_time_10_array(k) = elapsed_time;
                         
                         % subject position
-                        subject_current_pos = Motor1.ActualPosition;
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
                         subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         
-                        velocity_10_array(k) = Motor1.ActualVelocity;
-                        current_10_array(k) = Motor1.ActualCurrent;
+%                         velocity_10_array(k) = Motor1.ActualVelocity;
+                        current_10_array(k) = 0;
                         k = k+1;
                     end
 
-                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                    write(u2,data_box,"double","LocalHost",4000);
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    newV = typecast(single(data_box), 'int8')
+                    fwrite(u2, newV, 'int8')
+                    
                     velocity_array = [velocity_array velocity_10_array];
                     current_array = [current_array current_10_array];
                     target_pos_array = [target_pos_array target_pos_10_array];
@@ -525,19 +547,21 @@ switch exp_num
         hi5Position_Track.hi5Velocity = hi5Velocity;
         hi5Position_Track.hi5Current = hi5Current;
         save ('hi5Position_Track.mat','hi5Position_Track');
+        fclose(uw)
+        fclose(u2)
         
         
 %------------------------HI5 torque stablization---------------------------
     case 5 %torque stablization
-        %hi5 initialization
-        Motor1 = Epos4(0,0);
-        Motor1.ClearErrorState;
-        Motor1.DisableNode;
-        Motor1.SetOperationMode( OperationModes.CurrentMode );
-        Motor1.EnableNode;
-        Motor1.ClearErrorState;
+        fopen(uw);
+        fopen(u2);
         
-        Zero_position = Motor1.ActualPosition;
+        flush(ur)
+        dataR = int8(read(ur, 4, 'int8'));
+        Zero_position = typecast(dataR, 'single');
+        
+        dataW =  typecast(single([1 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
         
         hi5Torque_Stablization = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -548,13 +572,17 @@ switch exp_num
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        currentPrev=0;
+        current=0;
         
         Error = 0;
         block_num = 1;
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
-            Zero_position = Motor1.ActualPosition;
+            flush(ur)
+            dataR = int8(read(ur, 4, 'int8'));
+            Zero_position = typecast(dataR, 'single');
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
@@ -585,52 +613,63 @@ switch exp_num
                         case 0
                             current = 0;
                             current = safetyCheck(current);
-                            Motor1.MotionWithCurrent(current);
+%                             Motor1.MotionWithCurrent(current);
                         case 1
                             if (elapsed_time > 3.5)
                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0.5)
                                 current = -2000;
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-2000*(2*(elapsed_time));
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             end
                         case 2
                             if (elapsed_time > 3.5)
                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0.5)
                                 current = -3000;
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-3000*(2*(elapsed_time));
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             end
                         case 3
                             if (elapsed_time > 3.5)
                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0.5)
                                 current = -4000;
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-4000*(2*(elapsed_time));
                                 current = safetyCheck(current);
-                                Motor1.MotionWithCurrent(current);
+%                                 Motor1.MotionWithCurrent(current);
                             end
                     end
+
+                    if current == currentPrev
+                        dataW =  typecast(single([0 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                    else
+                        dataW =  typecast(single([1 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+%                         Motor1.MotionWithCurrent(current);
+                    end
+                    currentPrev=current;
                     
-                    subject_position = Motor1.ActualPosition;
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_position = typecast(dataR, 'single');
                     subject_traj = -(subject_position - Zero_position)*90/6400;
                     
                     data_box = [roundn(strength,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
@@ -638,11 +677,12 @@ switch exp_num
                     for i = 1:(length(data_box))
                         data_string = [data_string uniform_data(data_box(i))];
                     end
-                    write(u2,data_string,"string","LocalHost",4000);
+                    newV = typecast(single(data_string), 'int8')
+                    fwrite(u2, newV, 'int8')
                     data_string = [];
-                    velocity = Motor1.ActualVelocity;
-                    velocity_array = [velocity_array velocity];
-                    motor_current = Motor1.ActualCurrent;
+%                     velocity = Motor1.ActualVelocity;
+%                     velocity_array = [velocity_array velocity];
+                    motor_current = current;
                     current_array = [current_array motor_current];
                     target_strength_array = [target_strength_array strength];
                     subject_traj_array = [subject_traj_array subject_traj];
@@ -669,6 +709,8 @@ switch exp_num
         hi5Torque_Stablization.hi5Velocity = hi5Velocity;
         hi5Torque_Stablization.hi5Current = hi5Current;
         save ('hi5Torque_Stablization.mat','hi5Torque_Stablization');
+        fclose(uw)
+        fclose(u2)
 
         
 %------------------------Grip target tracking------------------------------
