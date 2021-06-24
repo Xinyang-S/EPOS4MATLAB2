@@ -365,7 +365,6 @@ switch exp_num
     case 3 %hi5 zero-assisted target tracking track
         fopen(uw);
         fopen(u2);
-        
         flush(ur)
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
@@ -605,10 +604,10 @@ switch exp_num
     case 5 %torque stablization
         fopen(uw);
         fopen(u2);
-        
         flush(ur)
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
+        
         
         dataW =  typecast(single([1 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
