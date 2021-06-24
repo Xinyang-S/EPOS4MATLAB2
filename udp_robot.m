@@ -27,14 +27,14 @@ while(1)
     encoder = Motor1.ActualPosition;
 
     %write data
-    dataW =  typecast(single(encoder), 'int8');
+    dataW =  typecast(single(encoder), 'int8')
     fwrite(uw, dataW, 'int8');
     pause(0.001);
     
     %read data
     try
         dataR = int8(read(ur,8, 'int8'));
-        dataR1 = typecast(dataR, 'single')
+        dataR1 = typecast(dataR, 'single');
         if (dataR1(1)==0)
         else
             Motor1.MotionWithCurrent(dataR1(2));

@@ -48,11 +48,9 @@ switch exp_num
         KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
         DW = 0*6400/90;
         filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
-
         
-
         %read data from robot matlab ( encoder )
-%         flush(ur);
+        flush(ur);
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
         
@@ -73,6 +71,7 @@ switch exp_num
         current_array = [];
         error_array = [];
         currentPrev=0;
+        current = 0;
         Error = 0;
         
         trial_num = 1;
@@ -84,7 +83,36 @@ switch exp_num
             posErrorPrev = 0;
             posErrorDiff = 0;
 %             pause(5);
-            while (clockCurrent < clockStart + trial_length)
+            while (clockCurrent < clockStart + trial_length + 5)
+                
+                if clockCurrent < (clockStart+5)
+                    k = 1;
+                    target_traj_10_array = zeros(1,10);
+                    while k <= 10
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
+
+                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
+
+                        % target position
+                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time_10_array(k) = elapsed_time;
+                        
+                        dataW =  typecast(single([0 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                        k = k+1;
+                    end
+
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    newV = typecast(single(data_box), 'int8')
+                    fwrite(u2, newV, 'int8')
+                    disp('Wrote!')
+                else
+                
                 k = 1;
                 
                 while k <= 10
@@ -102,7 +130,7 @@ switch exp_num
                     elapsed_time = clockCurrent - clockStart;
                     elapsed_time_10_array(k) = elapsed_time;
                     
-                    target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
+                    target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
                     
 %                     ErrorSample = sqrt((target_traj-subject_traj)^2);
@@ -149,6 +177,7 @@ switch exp_num
                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
+                end
             end
 %             Motor1.MotionWithCurrent(0);
             dataW =  typecast(single([1 0]), 'int8');
@@ -667,7 +696,7 @@ switch exp_num
             Error_array = [];
             Error = 0;
             while (clockCurrent < clockStart + trial_length + 5)
-                if clockCurrent < clockStart + 5 % countdown
+                if clockCurrent < (clockStart + 5) % countdown
                     k = 1;
                     while k <= 10
                         c = clock;
