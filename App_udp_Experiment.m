@@ -751,6 +751,7 @@ switch exp_num
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
+            block_flag = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
@@ -764,8 +765,9 @@ switch exp_num
                 elseif trial_index == 3
                     strength = 3;
                 end
+                
                 while (clockCurrent < clockStart + trial_length)
-                    if mod(trial_index,total_trial_num) == 1
+                    if mod(trial_index,total_trial_num) == 1 && (block_flag ==1)
                         c = clock;
                         clock_count_down_start = c(4)*3600+c(5)*60+c(6);
                         clock_count_down_current = clock_count_down_start;
@@ -774,19 +776,16 @@ switch exp_num
                             c = clock;
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                             force = read(u_force,10,'single');
-                            k = 1;
-                            strength = 0;
-%                             while k <= 10
-%                                 strength_10_array(k) = strength;
-%                                 k = k+1;
-%                             end
 
                             data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
         %                     disp(data_box);
                             newV = typecast(single(data_box), 'int8')
                             fwrite(u2, newV, 'int8')
                         end
-                        
+                        block_flag = ~block_flag;
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        clockStart = clockCurrent;
                     end
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
