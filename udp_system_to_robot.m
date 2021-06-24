@@ -20,7 +20,7 @@ while(1)
     clockNew = c(4)*3600 + c(5)*60 + c(6);
     current = amp_traj*sin((clockNew-clockStart)*freq_traj)
     current = safetyCheck(current);
-    dataW =  typecast(single([0 current]), 'int8');
+    dataW =  typecast(single([1 current]), 'int8');
     fwrite(uw, dataW, 'int8');
     pause(0.001);
     toc

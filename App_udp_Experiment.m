@@ -692,7 +692,7 @@ switch exp_num
                     
                     if traj_start_flag == 1
                         c = clock;
-                        traj_start_time = c(4)*3600+c(5)*60+c(6);
+                        traj_start_time = c(4)*3600+c(5)*60+c(6) - clockStart;
                         traj_start_flag = ~traj_start_flag;
                     end
                     while k <= 10
@@ -707,7 +707,7 @@ switch exp_num
     %                 Error_array = [Error_array ErrorSample];
     %                 Error = mean(Error_array);
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                    elapsed_time = [];
+                    
 
                     newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
@@ -720,7 +720,7 @@ switch exp_num
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
-%             gripforce_error.(force_name) = Error_array;
+            gripforce_error.(force_name) = Error_array;
             force_target_array = [];
             force_array = [];
             Error_array = [];
@@ -730,7 +730,7 @@ switch exp_num
         end
         gripTrack.gripForce = gripforce;
         gripTrack.gripForceTarget = gripforce_target;
-        gripTrack.gripforce_error = gripforce_error;
+%         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
         fclose(u2)
         
@@ -765,6 +765,29 @@ switch exp_num
                     strength = 3;
                 end
                 while (clockCurrent < clockStart + trial_length)
+                    if mod(trial_index,total_trial_num) == 1
+                        c = clock;
+                        clock_count_down_start = c(4)*3600+c(5)*60+c(6);
+                        clock_count_down_current = clock_count_down_start;
+                        
+                        while clock_count_down_current < clock_count_down_start + 5
+                            c = clock;
+                            clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                            force = read(u_force,10,'single');
+                            k = 1;
+                            strength = 0;
+%                             while k <= 10
+%                                 strength_10_array(k) = strength;
+%                                 k = k+1;
+%                             end
+
+                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+        %                     disp(data_box);
+                            newV = typecast(single(data_box), 'int8')
+                            fwrite(u2, newV, 'int8')
+                        end
+                        
+                    end
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     if (clockCurrent > clockStart + 3)
@@ -802,39 +825,13 @@ switch exp_num
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
-            pause(5);% time for ready count down in AppDesigner
         end
         gripForceMaintain.gripforce = gripforce;
         gripForceMaintain.gripforcetarget = gripforce_target;
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
-%------------------------Combine all the Data------------------------------
-    case 8
-        Motor1 = Epos4(0,0);
-        Motor1.ClearErrorState;
-        Motor1.DisableNode;
-        Motor1.SetOperationMode( OperationModes.CurrentMode );
-        Motor1.EnableNode;
-        Motor1.ClearErrorState;
         
-        Zero_position = Motor1.ActualPosition;
         
-        hi5Torque_Stablization = {};%cell aray for positional data
-        hi5WristPos = {};%cell aray for positional data
-        hi5TargetPos = {};
-        hi5Velocity = {};
-        hi5Current = {};
-        target_strength_array = [];
-        subject_traj_array = [];
-        velocity_array = [];
-        current_array = [];
-        
-        c =clock;
-        CurrentTime = c(4)*3600 + c(5)*60 + c(6);
-        StartTime = CurrentTime;
-        while (CurrentTime < StartTime + 5)
-            
-        end
 %------------------------Combine all the Data------------------------------
     case 9 % save all the data in workspace
         load('hi5Target_fullAssisted.mat');
