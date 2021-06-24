@@ -513,11 +513,11 @@ switch exp_num
         Error = 0;
         posFlag = 0;
         trial_index = 1;
-
         
         block_num = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
+            block_flag = 1;
             for i =1:1:total_trial_num/8 
                 position_array = [position_array 40 20 -10 -20];
             end
@@ -526,7 +526,29 @@ switch exp_num
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
                 executed = 0;
+                
                 while (clockCurrent < clockStart + trial_length)
+                    if mod(trial_index, total_trial_num) == 1 && (block_flag == 1)
+                        c = clock;
+                        clock_count_down_start = c(4)*3600+c(5)*60+c(6);
+                        clock_count_down_current = clock_count_down_start;
+
+                        while clock_count_down_current < clock_count_down_start + 5
+                            c = clock;
+                            clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_current_pos = typecast(dataR, 'single');
+
+                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                            newV = typecast(single(data_box), 'int8')
+                            fwrite(u2, newV, 'int8')
+                        end
+                        block_flag = ~block_flag;
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        clockStart = clockCurrent;
+                        
+                    end
                     if posFlag == 0 && executed ==0
                         index = randi(size(position_array));
                         target_pos = position_array(index);
