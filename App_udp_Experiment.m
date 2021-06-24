@@ -246,54 +246,84 @@ switch exp_num
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
-            while (clockCurrent < clockStart + trial_length)
-                k = 1;
-                while k <= 10
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    % subject position
-                    dataR = int8(read(ur, 4, 'int8'));
-                    subject_current_pos = typecast(dataR, 'single');
-                    
-                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
-                    subject_traj_10_array(k) = subject_traj;
-                    
-                    % target position
-                    elapsed_time = clockCurrent - clockStart;
-                    elapsed_time_10_array(k) = elapsed_time;
-                    
-                    target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
-                    target_traj_10_array(k) = target_traj;
-                    
-                    ErrorSample = sqrt((target_traj-subject_traj)^2);
-                    Error_array = [Error_array ErrorSample];
-                    Error = mean(Error_array);
+            while (clockCurrent < clockStart + trial_length + 5)
+                
+                if clockCurrent < (clockStart+5)
+                    k = 1;
+                    target_traj_10_array = zeros(1,10);
+                    while k <= 10
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
 
-                    %control Hi5 - stiffness
-                    position_Error = (-subject_traj) - target_traj;
-                    current = -1*(KW*position_Error + DW*posErrorDiff);
+                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
 
-                    if (current > currentMaxP)
-                        disp('Wall Too Strong!')
-                    elseif (current < currentMaxN)
-                        disp('Wall Broke!')
-                    else
-                        current = safetyCheck(current);
-                        if current == currentPrev
-                            dataW =  typecast(single([0 current]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-                        else
-                            dataW =  typecast(single([1 current]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-%                         Motor1.MotionWithCurrent(current);
-                        end
+                        % target position
+                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time_10_array(k) = elapsed_time;
+                        
+                        dataW =  typecast(single([0 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                        k = k+1;
                     end
-                    
-%                     velocity_10_array(k) = Motor1.ActualVelocity;
-                    current_10_array(k) = current;
-                    k = k+1;
-                    currentPrev=current;
+
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    newV = typecast(single(data_box), 'int8')
+                    fwrite(u2, newV, 'int8')
+                    disp('Wrote!')
+                else
+                
+                    k = 1;
+                    while k <= 10
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        % subject position
+    %                     subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
+
+                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
+
+                        % target position
+                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time_10_array(k) = elapsed_time;
+
+                        target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
+                        target_traj_10_array(k) = target_traj;
+
+    %                     ErrorSample = sqrt((target_traj-subject_traj)^2);
+    %                     Error_array = [Error_array ErrorSample];
+    %                     Error = mean(Error_array);
+
+                        %control Hi5 - stiffness
+                        position_Error = (- subject_traj) - target_traj;
+                        current = -1*(KW*position_Error + DW*posErrorDiff);
+
+                        if (current > currentMaxP)
+                            disp('Wall Too Strong!')
+                        elseif (current < currentMaxN)
+                            disp('Wall Broke!')
+                        else
+                            current = safetyCheck(current);
+                            if current == currentPrev
+                                dataW =  typecast(single([0 current]), 'int8');
+                                fwrite(uw, dataW, 'int8');
+                            else
+                                dataW =  typecast(single([1 current]), 'int8');
+                                fwrite(uw, dataW, 'int8');
+                            end
+                        end
+
+                        current_10_array(k) = current;
+                        k = k+1;
+                        currentPrev=current;
+                    end
                 end
+                
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                 newV = typecast(single(data_box), 'int8')
@@ -321,7 +351,6 @@ switch exp_num
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
-            pause(5);% time for ready count down in AppDesigner
         end
         hi5Target_semiAssisted.hi5WristPos = hi5WristPos;
         hi5Target_semiAssisted.hi5TargetPos = hi5TargetPos;
@@ -366,32 +395,55 @@ switch exp_num
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
-            while (clockCurrent < clockStart + trial_length)
-                k = 1;
-                while k <= 10
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    % subject position
-                    dataR = int8(read(ur, 4, 'int8'));
-                    subject_current_pos = typecast(dataR, 'single');
-                    
-                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
-                    subject_traj_10_array(k) = subject_traj;
-                    
-                    % target position
-                    elapsed_time = clockCurrent - clockStart;
-                    elapsed_time_10_array(k) = elapsed_time;
-                    
-                    target_traj = 2*18.51*(sin(elapsed_time*pi/1.547)*sin(elapsed_time*pi/2.875));
-                    target_traj_10_array(k) = target_traj;
-                    
-                    ErrorSample = sqrt((target_traj-subject_traj)^2);
-                    Error_array = [Error_array ErrorSample];
-                    Error = mean(Error_array);
-                    
+            while (clockCurrent < clockStart + trial_length + 5)
+                if clockCurrent < (clockStart+5)
+                    k = 1;
+                    target_traj_10_array = zeros(1,10);
+                    while k <= 10
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
 
-                    current_10_array(k) = 0;
-                    k = k+1;
+                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
+
+                        % target position
+                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time_10_array(k) = elapsed_time;
+                        
+                        dataW =  typecast(single([0 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                        k = k+1;
+                    end
+
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    newV = typecast(single(data_box), 'int8')
+                    fwrite(u2, newV, 'int8')
+                    disp('Wrote!')
+                else
+                
+                    k = 1;
+                    while k <= 10
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
+
+                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
+
+                        % target position
+                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time_10_array(k) = elapsed_time;
+
+                        target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
+                        target_traj_10_array(k) = target_traj;
+
+                        k = k+1;
+                    end
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
@@ -420,7 +472,6 @@ switch exp_num
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
-            pause(5);% time for ready count down in AppDesigner
         end
         hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
         hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
@@ -501,7 +552,6 @@ switch exp_num
                         subject_traj = -(subject_current_pos - Zero_position)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         
-%                         velocity_10_array(k) = Motor1.ActualVelocity;
                         current_10_array(k) = 0;
                         k = k+1;
                     end
@@ -612,59 +662,43 @@ switch exp_num
                     switch strength
                         case 0
                             current = 0;
-                            current = safetyCheck(current);
-%                             Motor1.MotionWithCurrent(current);
                         case 1
                             if (elapsed_time > 3.5)
                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
+                                
                             elseif (elapsed_time > 0.5)
                                 current = -2000;
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-2000*(2*(elapsed_time));
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             end
                         case 2
                             if (elapsed_time > 3.5)
                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
+                                
                             elseif (elapsed_time > 0.5)
                                 current = -3000;
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-3000*(2*(elapsed_time));
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             end
                         case 3
                             if (elapsed_time > 3.5)
                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
+                                
                             elseif (elapsed_time > 0.5)
                                 current = -4000;
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             elseif (elapsed_time > 0)
                                 current=-4000*(2*(elapsed_time));
-                                current = safetyCheck(current);
-%                                 Motor1.MotionWithCurrent(current);
                             end
                     end
 
                     if current == currentPrev
+                        current = safetyCheck(current);
                         dataW =  typecast(single([0 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                     else
+                        current = safetyCheck(current);
                         dataW =  typecast(single([1 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
-%                         Motor1.MotionWithCurrent(current);
                     end
                     currentPrev=current;
                     
