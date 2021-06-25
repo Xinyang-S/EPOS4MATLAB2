@@ -1026,11 +1026,11 @@ switch exp_num
                             target_pos = position_array(index);
                             position_array(index) = [];
                             executed = 1;
-                            sinPos=target_pos;
+                            sinPos=0;
                             treshold=target_pos;
                         elseif posFlag == 1
                             target_pos = 0;
-                            sinPos=0;
+                            sinPos=treshold;
                         end
                         k = 1;
                         while k <= 10
@@ -1044,15 +1044,15 @@ switch exp_num
                             
                             % target position
                             if target_pos==0
-                                if abs(sinPos) > 0.25
-                                sinPos=treshold+treshold/2*cos(1.5*block*((40/abs(treshold))^1.1)*sinTime)-treshold/2;
+                                if abs(sinPos) > 1
+                                sinPos=treshold+treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
                                 %sinPos=treshold+treshold/2*cos(2*sinTime)-treshold/2;
                                 else
                                     sinPos=0;
                                 end
                             else
-                                if abs(sinPos) < abs(treshold)-0.25
-                                sinPos=treshold/2*cos(1.5*block*((40/abs(treshold))^1.1)*sinTime)-treshold/2;
+                                if abs(sinPos) < abs(treshold)-1
+                                sinPos=treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
                                 %sinPos=treshold/2*cos(2*sinTime)-treshold/2;
                                 else
                                     sinPos=-target_pos;
