@@ -202,7 +202,7 @@ switch exp_num
         Error_array = [];
         currentPrev=0;
         current = 0;
-        
+        Error = 0;
         trial_num = 1;
         while(trial_num <= total_trial_num)
             data_box=[];
@@ -274,7 +274,7 @@ switch exp_num
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
-            dataW =  typecast(single([1 0]), 'int8');
+            dataW =  typecast(single([4 0]), 'int8');
             fwrite(uw, dataW, 'int8');
             
             trial_name = strcat('trial',num2str(trial_num));
@@ -396,7 +396,7 @@ switch exp_num
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
-            dataW =  typecast(single([1 0]), 'int8');
+            dataW =  typecast(single([4 0]), 'int8');
             fwrite(uw, dataW, 'int8');
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
@@ -487,7 +487,7 @@ switch exp_num
                                 % subject position
                                 dataR = int8(read(ur, 4, 'int8'));
                                 subject_current_pos = typecast(dataR, 'single');
-                                subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                                subject_traj = -(subject_current_pos)*90/6400;
                                 subject_traj_10_array(k) = subject_traj;
 
                                 current_10_array(k) = 0;
@@ -526,7 +526,7 @@ switch exp_num
                         % subject position
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
-                        subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                        subject_traj = -(subject_current_pos)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         
                         current_10_array(k) = 0;
@@ -537,8 +537,8 @@ switch exp_num
                     newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
                     
-                    velocity_array = [velocity_array velocity_10_array];
-                    current_array = [current_array current_10_array];
+%                     velocity_array = [velocity_array velocity_10_array];
+%                     current_array = [current_array current_10_array];
                     target_pos_array = [target_pos_array target_pos_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
@@ -554,8 +554,8 @@ switch exp_num
                 
                 hi5WristPos.(trial_name) = subject_traj_array;
                 hi5TargetPos.(trial_name) = target_pos_array;
-                hi5Velocity.(trial_name) = velocity_array;
-                hi5Current.(trial_name) = current_array;
+%                 hi5Velocity.(trial_name) = velocity_array;
+%                 hi5Current.(trial_name) = current_array;
                 target_pos_array = [];
                 subject_traj_array = [];
                 velocity_array = [];
@@ -570,8 +570,8 @@ switch exp_num
         end
         hi5Position_Track.hi5WristPos = hi5WristPos;
         hi5Position_Track.hi5TargetPos = hi5TargetPos;
-        hi5Position_Track.hi5Velocity = hi5Velocity;
-        hi5Position_Track.hi5Current = hi5Current;
+%         hi5Position_Track.hi5Velocity = hi5Velocity;
+%         hi5Position_Track.hi5Current = hi5Current;
         save ('hi5Position_Track.mat','hi5Position_Track');
         fclose(uw)
         fclose(u2)
@@ -606,6 +606,8 @@ switch exp_num
         Error = 0;
         block_num = 1;
         trial_index = 1;
+        flush(ur);
+        
         while(block_num <= total_block_num)
             trial_num = 1;
             block_flag = 1;
@@ -639,13 +641,12 @@ switch exp_num
                             while k <= 10
                                 dataR = int8(read(ur, 4, 'int8'));
                                 subject_position = typecast(dataR, 'single');
-                                subject_traj = -(subject_position - Zero_position)*90/6400;
+                                subject_traj = -(subject_position)*90/6400;
                                 subject_traj_10_array(k) = subject_traj;
                                 k = k+1;
                             end
                             data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
-        %                     disp(data_box);
-                            newV = typecast(single(data_box), 'int8')
+                            newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                         end
                         block_flag = ~block_flag;
@@ -694,23 +695,15 @@ switch exp_num
                             end
                     end
 
-                    if current == currentPrev
-                        current = safetyCheck(current);
-                        dataW =  typecast(single([4 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                    else
-                        current = safetyCheck(current);
-                        dataW =  typecast(single([3 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                    end
-                    
-                    currentPrev=current;
+                    current = safetyCheck(current);
+                    dataW =  typecast(single([3 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
                     
                     k = 1;
                     while k <= 10
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_position = typecast(dataR, 'single');
-                        subject_traj = -(subject_position - Zero_position)*90/6400;
+                        subject_traj = -(subject_position)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         strength_10_array(k) = strength;
                         k = k+1;
@@ -739,6 +732,8 @@ switch exp_num
                 trial_index = trial_index + 1;
                 disp('end of trial');
             end
+            dataW =  typecast(single([4 current]), 'int8');
+            fwrite(uw, dataW, 'int8');
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
         end

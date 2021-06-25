@@ -75,7 +75,8 @@ while(1)
         dataR = int8(read(ur,8, 'int8'));
         dataR1 = typecast(dataR, 'single');
         mode = dataR1(1);
-        trajectory = dataR1(2)*6400/90;
+%         trajectory = dataR1(2)*6400/90;
+        trajectory = dataR1(2);
     catch
         continue
     end
