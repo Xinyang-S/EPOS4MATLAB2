@@ -534,12 +534,24 @@ switch exp_num
                         clock_count_down_current = clock_count_down_start;
 
                         while clock_count_down_current < clock_count_down_start + 5
-                            c = clock;
-                            clock_count_down_current = c(4)*3600+c(5)*60+c(6);
-                            dataR = int8(read(ur, 4, 'int8'));
-                            subject_current_pos = typecast(dataR, 'single');
+                            k = 1;
+                            while k <= 10
+                                c = clock;
+                                clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                                elapsed_time = clock_count_down_current - clock_count_down_start;
+                                elapsed_time_10_array(k) = elapsed_time;
 
-                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                                % subject position
+                                dataR = int8(read(ur, 4, 'int8'));
+                                subject_current_pos = typecast(dataR, 'single');
+                                subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                                subject_traj_10_array(k) = subject_traj;
+
+                                current_10_array(k) = 0;
+                                k = k+1;
+                            end
+                            
+                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                             newV = typecast(single(data_box), 'int8')
                             fwrite(u2, newV, 'int8')
                         end
@@ -549,6 +561,7 @@ switch exp_num
                         clockStart = clockCurrent;
                         
                     end
+                    
                     if posFlag == 0 && executed ==0
                         index = randi(size(position_array));
                         target_pos = position_array(index);
@@ -738,19 +751,19 @@ switch exp_num
 %                     velocity = Motor1.ActualVelocity;
 %                     velocity_array = [velocity_array velocity];
                     motor_current = current;
-                    current_array = [current_array motor_current];
+%                     current_array = [current_array motor_current];
                     target_strength_array = [target_strength_array strength];
                     subject_traj_array = [subject_traj_array subject_traj];
                 end
                 trial_name = strcat('trial',num2str(trial_num));
                 hi5WristPos.(trial_name) = subject_traj_array;
                 hi5TargetPos.(trial_name) = target_strength_array;
-                hi5Velocity.(trial_name) = velocity_array;
-                hi5Current.(trial_name) = current_array;
+%                 hi5Velocity.(trial_name) = velocity_array;
+%                 hi5Current.(trial_name) = current_array;
                 target_strength_array = [];
                 subject_traj_array = [];
-                velocity_array = [];
-                current_array = [];
+%                 velocity_array = [];
+%                 current_array = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
                 disp('end of trial');
@@ -761,8 +774,8 @@ switch exp_num
         end
         hi5Torque_Stablization.hi5WristPos = hi5WristPos;
         hi5Torque_Stablization.hi5TargetPos = hi5TargetPos;
-        hi5Torque_Stablization.hi5Velocity = hi5Velocity;
-        hi5Torque_Stablization.hi5Current = hi5Current;
+%         hi5Torque_Stablization.hi5Velocity = hi5Velocity;
+%         hi5Torque_Stablization.hi5Current = hi5Current;
         save ('hi5Torque_Stablization.mat','hi5Torque_Stablization');
         fclose(uw)
         fclose(u2)
