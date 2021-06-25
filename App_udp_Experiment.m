@@ -987,6 +987,7 @@ switch exp_num
                     clockStart = c(4)*3600+c(5)*60+c(6);
                     clockCurrent = clockStart;
                     executed = 0;
+                    executed2 = 0;
 
                     while (clockCurrent < clockStart + trial_length)
                         if mod(trial_index, total_trial_num) == 1 && (block_flag == 1)
@@ -1030,9 +1031,10 @@ switch exp_num
                             executed = 1;
                             sinPos=0;
                             treshold=target_pos;
-                        elseif posFlag == 1
+                        elseif posFlag == 1 && executed2==0
                             target_pos = 0;
                             sinPos=treshold;
+                            executed2=1;
                         end
                         k = 1;
                         while k <= 10
@@ -1046,14 +1048,14 @@ switch exp_num
                             
                             % target position
                             if target_pos==0
-                                if abs(sinPos) > 1
-                                sinPos=treshold+treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
+                                if abs(sinPos) > 0.25
+                                sinPos=-(treshold+treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2);
                                 %sinPos=treshold+treshold/2*cos(2*sinTime)-treshold/2;
                                 else
                                     sinPos=0;
                                 end
                             else
-                                if abs(sinPos) < abs(treshold)-1
+                                if abs(sinPos) < abs(treshold)-0.25
                                 sinPos=treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
                                 %sinPos=treshold/2*cos(2*sinTime)-treshold/2;
                                 else
