@@ -657,9 +657,10 @@ switch exp_num
                     
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
+%                     clockStart = clockCurrent;
                     elapsed_time = clockCurrent - clockStart;
                     
-                    if (elapsed_time > 4)
+                    if (elapsed_time > 3)
                         strength = 0;
                     end
                     
@@ -667,32 +668,38 @@ switch exp_num
                         case 0
                             current = 0;
                         case 1
-                            if (elapsed_time > 3.5)
-                                current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                
-                            elseif (elapsed_time > 0.5)
-                                current = -2000;
-                            elseif (elapsed_time > 0)
-                                current=-2000*(2*(elapsed_time));
-                            end
+                            current = -2000;
                         case 2
-                            if (elapsed_time > 3.5)
-                                current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                
-                            elseif (elapsed_time > 0.5)
-                                current = -3000;
-                            elseif (elapsed_time > 0)
-                                current=-3000*(2*(elapsed_time));
-                            end
-                        case 3
-                            if (elapsed_time > 3.5)
-                                current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-                                
-                            elseif (elapsed_time > 0.5)
-                                current = -4000;
-                            elseif (elapsed_time > 0)
-                                current=-4000*(2*(elapsed_time));
-                            end
+                            current = -3000;
+                        case 3 
+                            current = -4000;
+%                         case 1
+%                             if (elapsed_time > 3.5)
+%                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+%                                 
+%                             elseif (elapsed_time > 0.5)
+%                                 current = -2000;
+%                             elseif (elapsed_time > 0)
+%                                 current=-2000*(2*(elapsed_time));
+%                             end
+%                         case 2
+%                             if (elapsed_time > 3.5)
+%                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+%                                 
+%                             elseif (elapsed_time > 0.5)
+%                                 current = -3000;
+%                             elseif (elapsed_time > 0)
+%                                 current=-3000*(2*(elapsed_time));
+%                             end
+%                         case 3
+%                             if (elapsed_time > 3.5)
+%                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+%                                 
+%                             elseif (elapsed_time > 0.5)
+%                                 current = -4000;
+%                             elseif (elapsed_time > 0)
+%                                 current=-4000*(2*(elapsed_time));
+%                             end
                     end
 
                     current = safetyCheck(current);

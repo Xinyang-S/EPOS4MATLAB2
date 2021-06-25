@@ -14,7 +14,8 @@ port = 5566;
 ur = udpport('LocalPort', port+1,'timeout',0.01);
 uw = udp('LocalHost', port+2,'timeout',100);
 fopen(uw);
-
+trajectory_array = [];
+time_array = [];
 % initialize motor
 Motor1 = Epos4(0,0);
 Motor1.ClearErrorState;
@@ -72,11 +73,15 @@ while(1)
     
     %read data
     try
+        c = clock();
+        c2= c(4)*3600+c(5)*60+c(6);
         dataR = int8(read(ur,8, 'int8'));
         dataR1 = typecast(dataR, 'single');
         mode = dataR1(1);
 %         trajectory = dataR1(2)*6400/90;
-        trajectory = dataR1(2);
+        trajectory = dataR1(2)
+        time_array = [time_array c2];
+        trajectory_array = [trajectory_array trajectory];
     catch
         continue
     end
