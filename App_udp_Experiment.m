@@ -515,6 +515,7 @@ switch exp_num
         trial_index = 1;
         
         block_num = 1;
+        flush(ur)
         while(block_num <= total_block_num)
             trial_num = 1;
             block_flag = 1;
@@ -590,7 +591,7 @@ switch exp_num
                         k = k+1;
                     end
 
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                     newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
                     
@@ -664,9 +665,7 @@ switch exp_num
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
-            flush(ur)
-            dataR = int8(read(ur, 4, 'int8'));
-            Zero_position = typecast(dataR, 'single');
+            block_flag = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
@@ -684,6 +683,27 @@ switch exp_num
                 end
                 
                 while (clockCurrent < clockStart + trial_length)
+                    
+                    if mod(trial_index,total_trial_num) == 1 && (block_flag ==1)
+                        c = clock;
+                        clock_count_down_start = c(4)*3600+c(5)*60+c(6);
+                        clock_count_down_current = clock_count_down_start;
+                        
+                        while clock_count_down_current < clock_count_down_start + 5
+                            c = clock;
+                            clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                            force = read(u_force,10,'single');
+
+                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+        %                     disp(data_box);
+                            newV = typecast(single(data_box), 'int8')
+                            fwrite(u2, newV, 'int8')
+                        end
+                        block_flag = ~block_flag;
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        clockStart = clockCurrent;
+                    end
                     
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
