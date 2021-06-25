@@ -282,7 +282,7 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
 %             hi5Velocity.(trial_name) = velocity_array;
 %             hi5Current.(trial_name) = current_array;
-            hi5Error.(trial_name) = Error_array;
+%             hi5Error.(trial_name) = Error_array;
             target_traj_array = [];
             subject_traj_array = [];
             velocity_array = [];
@@ -348,14 +348,14 @@ switch exp_num
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj = -(subject_current_pos).*90/6400;
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
                         elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
                         
-                        dataW =  typecast(single([0 current]), 'int8');
+                        dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
@@ -373,7 +373,7 @@ switch exp_num
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj = -(subject_current_pos).*90/6400;
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
@@ -391,8 +391,8 @@ switch exp_num
                 newV = typecast(single(data_box), 'int8')
                 fwrite(u2, newV, 'int8')
 
-                velocity_array = [velocity_array velocity_10_array];
-                current_array = [current_array current_10_array];
+%                 velocity_array = [velocity_array velocity_10_array];
+%                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
@@ -401,8 +401,8 @@ switch exp_num
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
-            hi5Velocity.(trial_name) = velocity_array;
-            hi5Current.(trial_name) = current_array;
+%             hi5Velocity.(trial_name) = velocity_array;
+%             hi5Current.(trial_name) = current_array;
             hi5Error.(trial_name) = error_array;
             target_traj_array = [];
             subject_traj_array = [];
@@ -415,9 +415,9 @@ switch exp_num
         end
         hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
         hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
-        hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
-        hi5Target_zeroAssisted.hi5Current = hi5Current;
-        hi5Target_zeroAssisted.hi5Error = hi5Error;
+%         hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
+%         hi5Target_zeroAssisted.hi5Current = hi5Current;
+%         hi5Target_zeroAssisted.hi5Error = hi5Error;
         save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
         fclose(u2)
         fclose(uw)
@@ -429,11 +429,12 @@ switch exp_num
         fopen(u2);
         
         flush(ur)
+        
+        dataW =  typecast(single([0 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
-        
-        dataW =  typecast(single([1 0]), 'int8');%set current to 0
-        fwrite(uw, dataW, 'int8');
         
         hi5Position_Track = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -581,11 +582,12 @@ switch exp_num
         fopen(uw);
         fopen(u2);
         flush(ur)
+        
+        dataW =  typecast(single([0 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
-        
-        dataW =  typecast(single([1 0]), 'int8');%set current to 0
-        fwrite(uw, dataW, 'int8');
         
         hi5Torque_Stablization = {};%cell aray for positional data
         hi5WristPos = {};%cell aray for positional data
@@ -694,11 +696,11 @@ switch exp_num
 
                     if current == currentPrev
                         current = safetyCheck(current);
-                        dataW =  typecast(single([0 current]), 'int8');
+                        dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                     else
                         current = safetyCheck(current);
-                        dataW =  typecast(single([1 current]), 'int8');
+                        dataW =  typecast(single([3 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                     end
                     

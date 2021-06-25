@@ -57,7 +57,7 @@ while(1)
         KW = -4;
         DW = 0;
         Motor1.MotionWithCurrent(current);
-    elseif ( mode == 3 && init == 0)
+    elseif ( mode == 3 )
         init = 1;
         Motor1.MotionWithCurrent(trajectory);
     elseif ( mode == 4 )%zero assistance
