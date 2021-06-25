@@ -3,7 +3,7 @@
 try
     delete(Motor1);
     disp('estop')
-catch 
+catch
 end
 %%
 % read udpport (no flush)
@@ -43,9 +43,10 @@ while(1)
     posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
     posErrorPrev = posError;
     current = KW*posError + DW*posErrorDiff;
-    if ( mode == 0 && init == 0)%zero assistance
+    current = safetyCheck(current);
+    if ( mode == 0 )%zero assistance
         init = 1;
-        Motor1.MotionWithCurrent(0);
+        encoderStart = Motor1.ActualPosition;
     elseif ( mode  == 1 ) % medium stiffness
         init = 0;
         KW = -2;
@@ -61,6 +62,7 @@ while(1)
         Motor1.MotionWithCurrent(trajectory);
     elseif ( mode == 4 )%zero assistance
         init = 0;
+        Motor1.MotionWithCurrent(0);
     else
     end
     %write data
@@ -79,10 +81,6 @@ while(1)
     end
         toc
 end
-
-
-
-
 
 %%
 % Haptic wall (still a bit bouncy)

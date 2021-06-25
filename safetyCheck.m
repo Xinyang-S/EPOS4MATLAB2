@@ -1,7 +1,11 @@
 function current_output = safetyCheck(current_input)
-    if abs(current_input) >= 7000
+    current_max = 7000;
+    if current_input >= current_max
         disp('current too high!')
-        current_output = 0;
+        current_output = current_max;
+    elseif current_input <= -current_max
+        disp('current too low!')
+        current_output = -current_max;
     else
         current_output = current_input;
     end

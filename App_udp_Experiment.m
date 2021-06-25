@@ -42,15 +42,12 @@ switch exp_num
         
         fopen(uw);
         fopen(u2);
-        % PID variables
-        currentMaxP = 10000;
-        currentMaxN = -10000;
-        KW = 2*6400/90; %spring: 1 light, 2 med (best demo), 3 large, 4 heavy (limit)
-        DW = 0*6400/90;
-        filterLP_D = 0.7; %filter error velocity: 0.7, not very sensitive
-        
         %read data from robot matlab ( encoder )
         flush(ur);
+        
+        dataW =  typecast(single([0 0]), 'int8');%set zero position
+        fwrite(uw, dataW, 'int8');
+        
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
         
@@ -95,22 +92,21 @@ switch exp_num
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                        subject_traj = -(subject_current_pos).*90/6400;
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
                         elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
                         
-                        dataW =  typecast(single([0 current]), 'int8');
+                        dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
 
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
-                    disp('Wrote!')
                 else
                 
                 k = 1;
@@ -123,7 +119,7 @@ switch exp_num
                     dataR = int8(read(ur, 4, 'int8'));
                     subject_current_pos = typecast(dataR, 'single');
                     
-                    subject_traj = -(subject_current_pos - Zero_position).*90/6400;
+                    subject_traj = -(subject_current_pos).*90/6400;
                     subject_traj_10_array(k) = subject_traj;
                     
                     % target position
@@ -132,46 +128,16 @@ switch exp_num
                     
                     target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
-                    
-%                     ErrorSample = sqrt((target_traj-subject_traj)^2);
-%                     Error_array = [Error_array ErrorSample];
-%                     Error = mean(Error_array);
 
-                    %control Hi5 - stiffness
-                    position_Error = (- subject_traj) - target_traj;
-                    posErrorDiffNew = position_Error - posErrorPrev;
-                    posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
-                    posErrorPrev = position_Error;
-
-                    current = -1*(KW*position_Error + DW*posErrorDiff);
-
-                    if (current > currentMaxP)
-                        disp('Wall Too Strong!')
-                    elseif (current < currentMaxN)
-                        disp('Wall Broke!')
-                    else
-                        current = safetyCheck(current);
-                        if current == currentPrev
-                            dataW =  typecast(single([0 current]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-                        else
-                            dataW =  typecast(single([1 current]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-%                         Motor1.MotionWithCurrent(current);
-                        end
-                    end
-                    
-%                     velocity_10_array(k) = Motor1.ActualVelocity;
-                    current_10_array(k) = current;
+                    dataW =  typecast(single([2 target_traj]), 'int8');
+                    fwrite(uw, dataW, 'int8');
                     k = k+1;
-                    currentPrev=current;
-                
+                    
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                newV = typecast(single(data_box), 'int8')
+                newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
-                disp('Wrote!')
 
 %                 velocity_array = [velocity_array velocity_10_array];
                 current_array = [current_array current_10_array];
@@ -180,7 +146,7 @@ switch exp_num
                 end
             end
 %             Motor1.MotionWithCurrent(0);
-            dataW =  typecast(single([1 0]), 'int8');
+            dataW =  typecast(single([4 0]), 'int8');
             fwrite(uw, dataW, 'int8');
             
             trial_name = strcat('trial',num2str(trial_num));
@@ -205,6 +171,7 @@ switch exp_num
         hi5Target_fullAssisted.hi5Current = hi5Current;
         hi5Target_fullAssisted.hi5Error = hi5Error;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
+        
         fclose(u2);
         fclose(uw);
 %------------------------Semi-assisted target tracking---------------------
