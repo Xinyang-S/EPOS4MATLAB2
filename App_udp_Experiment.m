@@ -937,6 +937,179 @@ switch exp_num
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
         
+%------------------------Position training-------------------------------
+
+    case 8 %hi5 position training
+            fopen(uw);
+            fopen(u2);
+
+            flush(ur)
+            dataR = int8(read(ur, 4, 'int8'));
+            Zero_position = typecast(dataR, 'single');
+
+            dataW =  typecast(single([1 0]), 'int8');%set current to 0
+            fwrite(uw, dataW, 'int8');
+
+            hi5Position_Track = {};%cell aray for positional data
+            hi5WristPos = {};%cell aray for positional data
+            hi5TargetPos = {};
+            hi5Velocity = {};
+            hi5Current = {};
+            target_pos_10_array = zeros(1,10);
+            elapsed_time_10_array = zeros(1,10);
+            subject_traj_10_array = zeros(1,10);
+            velocity_10_array = zeros(1,10);
+            current_10_array = zeros(1,10);
+            target_pos_array = [];
+            subject_traj_array = [];
+            velocity_array = [];
+            current_array = [];
+            position_array = [];
+
+            Error = 0;
+            posFlag = 0;
+            trial_index = 1;
+
+            block_num = 1;
+            flush(ur)
+            while(block_num <= total_block_num)
+                trial_num = 1;
+                block_flag = 1;
+                for i =1:1:total_trial_num/8 
+                    position_array = [position_array 40 20 -10 -20];
+                end
+                while(trial_num <= total_trial_num)
+                    c = clock;
+                    clockStart = c(4)*3600+c(5)*60+c(6);
+                    clockCurrent = clockStart;
+                    executed = 0;
+
+                    while (clockCurrent < clockStart + trial_length)
+                        if mod(trial_index, total_trial_num) == 1 && (block_flag == 1)
+                            c = clock;
+                            clock_count_down_start = c(4)*3600+c(5)*60+c(6);
+                            clock_count_down_current = clock_count_down_start;
+
+                            while clock_count_down_current < clock_count_down_start + 5
+                                k = 1;
+                                while k <= 10
+                                    c = clock;
+                                    clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                                    elapsed_time = clock_count_down_current - clock_count_down_start;
+                                    elapsed_time_10_array(k) = elapsed_time;
+
+                                    % subject position
+                                    dataR = int8(read(ur, 4, 'int8'));
+                                    subject_current_pos = typecast(dataR, 'single');
+                                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                                    subject_traj_10_array(k) = subject_traj;
+
+                                    current_10_array(k) = 0;
+                                    k = k+1;
+                                end
+
+                                data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                                newV = typecast(single(data_box), 'int8')
+                                fwrite(u2, newV, 'int8')
+                            end
+                            block_flag = ~block_flag;
+                            c = clock;
+                            clockCurrent = c(4)*3600+c(5)*60+c(6);
+                            clockStart = clockCurrent;
+
+                        end
+
+                        if posFlag == 0 && executed ==0
+                            index = randi(size(position_array));
+                            target_pos = position_array(index);
+                            position_array(index) = [];
+                            executed = 1;
+                            sinPos=target_pos;
+                            treshold=target_pos;
+                        elseif posFlag == 1
+                            target_pos = 0;
+                            sinPos=0;
+                        end
+                        k = 1;
+                        while k <= 10
+
+                            %target_pos_10_array(k) = target_pos;
+
+                            c = clock;
+                            clockCurrent = c(4)*3600+c(5)*60+c(6);
+                            elapsed_time = clockCurrent - clockStart;
+                            elapsed_time_10_array(k) = elapsed_time;
+                            
+                            % target position
+                            if target_pos==0
+                                if abs(sinPos) > 0.25
+                                sinPos=treshold+treshold/2*cos(1.5*block*((40/abs(treshold))^1.1)*sinTime)-treshold/2;
+                                %sinPos=treshold+treshold/2*cos(2*sinTime)-treshold/2;
+                                else
+                                    sinPos=0;
+                                end
+                            else
+                                if abs(sinPos) < abs(treshold)-0.25
+                                sinPos=treshold/2*cos(1.5*block*((40/abs(treshold))^1.1)*sinTime)-treshold/2;
+                                %sinPos=treshold/2*cos(2*sinTime)-treshold/2;
+                                else
+                                    sinPos=-target_pos;
+                                end
+                            end
+                            target_traj_10_array(k) = sinPos;
+
+                            % subject position
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_current_pos = typecast(dataR, 'single');
+                            subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                            subject_traj_10_array(k) = subject_traj;
+
+                            current_10_array(k) = 0;
+                            k = k+1;
+                        end
+
+                        data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                        newV = typecast(single(data_box), 'int8')
+                        fwrite(u2, newV, 'int8')
+
+                        velocity_array = [velocity_array velocity_10_array];
+                        current_array = [current_array current_10_array];
+                        target_pos_array = [target_pos_array target_pos_10_array];
+                        subject_traj_array = [subject_traj_array subject_traj_10_array];
+                    end
+
+                    posFlag = ~posFlag;
+                    if block_num == 1
+                        trial_name = strcat('Slow_trial',num2str(trial_index));
+                    elseif block_num == 2
+                        trial_name = strcat('Fast_trial',num2str(trial_index));
+                    else
+                        trial_name = strcat('trial',num2str(trial_index));
+                    end
+
+                    hi5WristPos.(trial_name) = subject_traj_array;
+                    hi5TargetPos.(trial_name) = target_pos_array;
+                    hi5Velocity.(trial_name) = velocity_array;
+                    hi5Current.(trial_name) = current_array;
+                    target_pos_array = [];
+                    subject_traj_array = [];
+                    velocity_array = [];
+                    current_array = [];
+                    disp(trial_num);
+                    trial_num = trial_num + 1;
+                    trial_index = trial_index + 1;
+                    disp('end of trial');
+                end
+                block_num = block_num + 1;
+                disp(['Block number: ', num2str(block_num)]);
+            end
+            hi5Position_Track.hi5WristPos = hi5WristPos;
+            hi5Position_Track.hi5TargetPos = hi5TargetPos;
+            hi5Position_Track.hi5Velocity = hi5Velocity;
+            hi5Position_Track.hi5Current = hi5Current;
+            %save ('hi5Position_Track.mat','hi5Position_Track');
+            fclose(uw)
+            fclose(u2)
         
 %------------------------Combine all the Data------------------------------
     case 9 % save all the data in workspace
