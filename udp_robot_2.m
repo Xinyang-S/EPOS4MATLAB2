@@ -1,5 +1,11 @@
 %  UDP ROBOT
 %%
+try
+    delete(Motor1);
+    disp('estop')
+catch 
+end
+%%
 % read udpport (no flush)
 % write udp
 clear ur;
@@ -21,11 +27,42 @@ clockStart = (c(4)*3600+c(5)*60+c(6))/1000;
 current = 0;
 encoder = 0;
 Motor1.MotionWithCurrent(0);
-
+encoderStart = Motor1.ActualPosition;
+KW = 0;
+DW= 0;
+trajectory = 0;
+mode = 0;
+init = 0;
+filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0; 
 while(1)
     tic
-    encoder = Motor1.ActualPosition;
-
+    encoder = Motor1.ActualPosition - encoderStart;
+    %calculate error velocity
+    posError = encoder - trajectory;
+    posErrorDiffNew = posError - posErrorPrev;
+    posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
+    posErrorPrev = posError;
+    current = KW*posError + DW*posErrorDiff;
+    if ( mode == 0 && init == 0)%zero assistance
+        init = 1;
+        Motor1.MotionWithCurrent(0);
+    elseif ( mode  == 1 ) % medium stiffness
+        init = 0;
+        KW = -2;
+        DW= 0;
+        Motor1.MotionWithCurrent(current);
+    elseif ( mode  == 2 ) % full assistance (high stiffness)
+        init = 0;
+        KW = -4;
+        DW = 0;
+        Motor1.MotionWithCurrent(current);
+    elseif ( mode == 3 && init == 0)
+        init = 1;
+        Motor1.MotionWithCurrent(trajectory);
+    elseif ( mode == 4 )%zero assistance
+        init = 0;
+    else
+    end
     %write data
     dataW =  typecast(single(encoder), 'int8');
     fwrite(uw, dataW, 'int8');
@@ -35,15 +72,16 @@ while(1)
     try
         dataR = int8(read(ur,8, 'int8'));
         dataR1 = typecast(dataR, 'single');
-        if (dataR1(1)==0)
-        else
-            Motor1.MotionWithCurrent(dataR1(2));
-        end
+        mode = dataR1(1);
+        trajectory = dataR1(2)*6400/90;
     catch
         continue
     end
         toc
 end
+
+
+
 
 
 %%

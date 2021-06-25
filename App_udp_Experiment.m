@@ -625,7 +625,6 @@ switch exp_num
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
-            pause(5);% time for ready count down in AppDesigner
         end
         hi5Position_Track.hi5WristPos = hi5WristPos;
         hi5Position_Track.hi5TargetPos = hi5TargetPos;
@@ -644,7 +643,6 @@ switch exp_num
         dataR = int8(read(ur, 4, 'int8'));
         Zero_position = typecast(dataR, 'single');
         
-        
         dataW =  typecast(single([1 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
         
@@ -657,6 +655,8 @@ switch exp_num
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
+        subject_traj_10_array = [];
+        strength_10_array = [];
         currentPrev=0;
         current=0;
         
@@ -692,9 +692,15 @@ switch exp_num
                         while clock_count_down_current < clock_count_down_start + 5
                             c = clock;
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
-                            force = read(u_force,10,'single');
-
-                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                            k = 1;
+                            while k <= 10
+                                dataR = int8(read(ur, 4, 'int8'));
+                                subject_position = typecast(dataR, 'single');
+                                subject_traj = -(subject_position - Zero_position)*90/6400;
+                                subject_traj_10_array(k) = subject_traj;
+                                k = k+1;
+                            end
+                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
         %                     disp(data_box);
                             newV = typecast(single(data_box), 'int8')
                             fwrite(u2, newV, 'int8')
@@ -754,23 +760,25 @@ switch exp_num
                         dataW =  typecast(single([1 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                     end
+                    
                     currentPrev=current;
                     
-                    dataR = int8(read(ur, 4, 'int8'));
-                    subject_position = typecast(dataR, 'single');
-                    subject_traj = -(subject_position - Zero_position)*90/6400;
-                    
-                    data_box = [roundn(strength,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                    disp(data_box);
-                    for i = 1:(length(data_box))
-                        data_string = [data_string uniform_data(data_box(i))];
+                    k = 1;
+                    while k <= 10
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_position = typecast(dataR, 'single');
+                        subject_traj = -(subject_position - Zero_position)*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
+                        strength_10_array(k) = strength;
+                        k = k+1;
                     end
-                    newV = typecast(single(data_string), 'int8')
+                    data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
+                    
+                    newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
-                    data_string = [];
 %                     velocity = Motor1.ActualVelocity;
 %                     velocity_array = [velocity_array velocity];
-                    motor_current = current;
+%                     motor_current = current;
 %                     current_array = [current_array motor_current];
                     target_strength_array = [target_strength_array strength];
                     subject_traj_array = [subject_traj_array subject_traj];
@@ -790,7 +798,6 @@ switch exp_num
             end
             block_num = block_num + 1;
             disp(['Block number: ', num2str(block_num)]);
-            pause(5);% time for ready count down in AppDesigner
         end
         hi5Torque_Stablization.hi5WristPos = hi5WristPos;
         hi5Torque_Stablization.hi5TargetPos = hi5TargetPos;
