@@ -948,12 +948,15 @@ switch exp_num
             fopen(u2);
 
             flush(ur)
+            
+            dataW =  typecast(single([0 0]), 'int8');%set current to 0
+            fwrite(uw, dataW, 'int8');
+
+            
             dataR = int8(read(ur, 4, 'int8'));
             Zero_position = typecast(dataR, 'single');
 
-            dataW =  typecast(single([1 0]), 'int8');%set current to 0
-            fwrite(uw, dataW, 'int8');
-
+            
             hi5Position_Track = {};%cell aray for positional data
             hi5WristPos = {};%cell aray for positional data
             hi5TargetPos = {};
@@ -1006,7 +1009,7 @@ switch exp_num
                                     % subject position
                                     dataR = int8(read(ur, 4, 'int8'));
                                     subject_current_pos = typecast(dataR, 'single');
-                                    subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                                    subject_traj = -(subject_current_pos)*90/6400;
                                     subject_traj_10_array(k) = subject_traj;
 
                                     current_10_array(k) = 0;
@@ -1067,10 +1070,10 @@ switch exp_num
                             % subject position
                             dataR = int8(read(ur, 4, 'int8'));
                             subject_current_pos = typecast(dataR, 'single');
-                            subject_traj = -(subject_current_pos - Zero_position)*90/6400;
+                            subject_traj = -(subject_current_pos)*90/6400;
                             subject_traj_10_array(k) = subject_traj;
 
-                            current_10_array(k) = 0;
+%                             current_10_array(k) = 0;
                             k = k+1;
                         end
 
@@ -1078,8 +1081,8 @@ switch exp_num
                         newV = typecast(single(data_box), 'int8')
                         fwrite(u2, newV, 'int8')
 
-                        velocity_array = [velocity_array velocity_10_array];
-                        current_array = [current_array current_10_array];
+%                         velocity_array = [velocity_array velocity_10_array];
+%                         current_array = [current_array current_10_array];
                         target_pos_array = [target_pos_array target_pos_10_array];
                         subject_traj_array = [subject_traj_array subject_traj_10_array];
                     end
@@ -1095,8 +1098,8 @@ switch exp_num
 
                     hi5WristPos.(trial_name) = subject_traj_array;
                     hi5TargetPos.(trial_name) = target_pos_array;
-                    hi5Velocity.(trial_name) = velocity_array;
-                    hi5Current.(trial_name) = current_array;
+%                     hi5Velocity.(trial_name) = velocity_array;
+%                     hi5Current.(trial_name) = current_array;
                     target_pos_array = [];
                     subject_traj_array = [];
                     velocity_array = [];
@@ -1111,8 +1114,8 @@ switch exp_num
             end
             hi5Position_Track.hi5WristPos = hi5WristPos;
             hi5Position_Track.hi5TargetPos = hi5TargetPos;
-            hi5Position_Track.hi5Velocity = hi5Velocity;
-            hi5Position_Track.hi5Current = hi5Current;
+%             hi5Position_Track.hi5Velocity = hi5Velocity;
+%             hi5Position_Track.hi5Current = hi5Current;
             %save ('hi5Position_Track.mat','hi5Position_Track');
             fclose(uw)
             fclose(u2)
