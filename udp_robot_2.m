@@ -11,7 +11,7 @@ end
 clear ur;
 %fclose(uw);
 port = 5566;
-ur = udpport('LocalPort', port+1,'timeout',0.01);
+ur = udpport('LocalPort', port+1,'timeout',0.005);
 uw = udp('LocalHost', port+2,'timeout',100);
 fopen(uw);
 trajectory_array = [];
@@ -62,7 +62,7 @@ while(1)
         Motor1.MotionWithCurrent(trajectory);
     elseif ( mode == 4 )%zero assistance
         init = 0;
-        Motor1.MotionWithCurrent(0);
+%         Motor1.MotionWithCurrent(0);
     else
     end
     %write data

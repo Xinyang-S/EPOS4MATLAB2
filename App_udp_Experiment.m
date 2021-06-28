@@ -16,6 +16,31 @@ Error_array = [];
 hi5Torque = {};
 hi5Position = {};
 
+% Change for individual recorder host
+recorderip = '127.0.0.1';
+eegall = [];
+% Establish connection to BrainVision Recorder Software 32Bit RDA-Port
+% (use 51234 to connect with 16Bit Port)
+
+con = pnet('tcpconnect', recorderip, 51244,'type',1);
+
+% Check established connection and display a message
+stat = pnet(con,'status');
+if stat > 0
+    disp('connection established');
+end
+
+
+% --- Main reading loop ---
+header_size = 24;
+
+%eeg init
+ eeg_data = [];
+ props = [];
+[~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
+[~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
+
+con = pnet('tcpconnect', recorderip, 51244,'type',4);
 %% Run Python Code Here to activate Grip sensor
 % StartGripSensor()
 
@@ -67,6 +92,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        eeg_data = [];
         currentPrev=0;
         current = 0;
         Error = 0;
@@ -82,7 +108,7 @@ switch exp_num
             clockCurrent = clockStart;
             flush(ur);
             while (clockCurrent < clockStart + trial_length + 5)
-                
+            tic  
                 if clockCurrent < (clockStart+5)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
@@ -99,7 +125,9 @@ switch exp_num
                         % target position
                         elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
-                        
+
+%                         [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
+%                         eeg_data = [eeg_data eeg_current];
                         dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
@@ -129,10 +157,15 @@ switch exp_num
                     
                     target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
-
+                    tic
+                    [eeg_current, props,j] = get_eeg(recorderip, con, stat, header_size, props);
+                    j
+                    eeg_data = [eeg_data eeg_current];
+                    toc
                     dataW =  typecast(single([2 target_traj]), 'int8');
                     fwrite(uw, dataW, 'int8');
                     k = k+1;
+                    
                     
                 end
                 
@@ -141,10 +174,11 @@ switch exp_num
                 fwrite(u2, newV, 'int8')
 
 %                 velocity_array = [velocity_array velocity_10_array];
-                current_array = [current_array current_10_array];
+%                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
+            toc
             end
 %             Motor1.MotionWithCurrent(0);
             dataW =  typecast(single([4 0]), 'int8');
@@ -153,24 +187,26 @@ switch exp_num
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
+            hi5EEG.(trial_name) = eeg_data;
 %             hi5Velocity.(trial_name) = velocity_array;
-            hi5Current.(trial_name) = current_array;
+%             hi5Current.(trial_name) = current_array;
             hi5Error.(trial_name) = Error_array;
             target_traj_array = [];
             subject_traj_array = [];
             velocity_array = [];
             current_array = [];
             Error_array = [];
+            eeg_data = [];
             disp(trial_num);
             trial_num = trial_num+1;
-            disp('end of trial');
             % time for ready count down in AppDesigner
         end
         hi5Target_fullAssisted.hi5WristPos = hi5WristPos;
         hi5Target_fullAssisted.hi5TargetPos = hi5TargetPos;
 %         hi5Target_fullAssisted.hi5Velocity = hi5Velocity;
-        hi5Target_fullAssisted.hi5Current = hi5Current;
+%         hi5Target_fullAssisted.hi5Current = hi5Current;
         hi5Target_fullAssisted.hi5Error = hi5Error;
+        hi5Target_fullAssisted.hi5EEG=hi5EEG;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
         
         fclose(u2);
@@ -218,7 +254,7 @@ switch exp_num
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
             while (clockCurrent < clockStart + trial_length + 5)
-                
+
                 if clockCurrent < (clockStart+5)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
@@ -247,7 +283,7 @@ switch exp_num
                     fwrite(u2, newV, 'int8')
                     disp('Wrote!')
                 else
-                
+                    tic
                     k = 1;
                     while k <= 10
                         c = clock;
@@ -273,15 +309,16 @@ switch exp_num
                         k = k+1;
                     end
                 end
-                
+                toc
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
 %                 velocity_array = [velocity_array velocity_10_array];
-                current_array = [current_array current_10_array];
+                %current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
+            
             end
             
             
@@ -397,7 +434,10 @@ switch exp_num
 
                         target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
                         target_traj_10_array(k) = target_traj;
-
+                        
+                        dataW =  typecast(single([4 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                        
                         k = k+1;
                     end
                 end
@@ -791,6 +831,7 @@ switch exp_num
         Error_array = [];
         elapsed_time = zeros(1,10);
         force_target = [];
+        eeg_data = [];
         trial_num = 1;
         gripTrack = {};
         gripforce = {};
@@ -799,6 +840,8 @@ switch exp_num
         
         
         while(trial_num <= total_trial_num)
+            
+            
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart; 
@@ -811,6 +854,10 @@ switch exp_num
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         elapsed_time(k) = clockCurrent - clockStart;
+                        
+                        [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
+                        eeg_data = [eeg_data eeg_current];
+                        
                         k = k+1;
                     end
                     
@@ -837,6 +884,10 @@ switch exp_num
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         elapsed_time(k) = clockCurrent - clockStart;
+                        
+                        [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
+                        eeg_data = [eeg_data eeg_current];
+                        
                         k = k+1;
                     end
                     force_target =2.*18.51.*(sin((elapsed_time-traj_start_time+10).*pi/1.547).*sin((elapsed_time-traj_start_time+10).*pi/2.875));
@@ -859,9 +910,11 @@ switch exp_num
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
             gripforce_error.(force_name) = Error_array;
+            gripforce_eeg.(force_name) = eeg_data;
             force_target_array = [];
             force_array = [];
             Error_array = [];
+            eeg_data = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
