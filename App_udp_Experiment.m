@@ -72,6 +72,10 @@ switch exp_num
         Error = 0;
         
         trial_num = 1;
+        
+        dataW =  typecast(single([4 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
@@ -100,7 +104,7 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
-
+                    
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -204,6 +208,10 @@ switch exp_num
         current = 0;
         Error = 0;
         trial_num = 1;
+        
+        dataW =  typecast(single([4 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         while(trial_num <= total_trial_num)
             data_box=[];
             c = clock;
@@ -221,7 +229,7 @@ switch exp_num
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos).*90/6400;
+                        subject_traj = -(subject_current_pos)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
@@ -232,7 +240,8 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
-
+                    
+                    
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                     newV = typecast(single(data_box), 'int8')
                     fwrite(u2, newV, 'int8')
@@ -248,7 +257,7 @@ switch exp_num
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos).*90/6400;
+                        subject_traj = -(subject_current_pos)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
@@ -274,8 +283,7 @@ switch exp_num
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
             end
-            dataW =  typecast(single([4 0]), 'int8');
-            fwrite(uw, dataW, 'int8');
+            
             
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
@@ -292,6 +300,9 @@ switch exp_num
             trial_num = trial_num+1;
             disp('end of trial');
         end
+        dataW =  typecast(single([4 0]), 'int8');
+        fwrite(uw, dataW, 'int8');
+            
         hi5Target_semiAssisted.hi5WristPos = hi5WristPos;
         hi5Target_semiAssisted.hi5TargetPos = hi5TargetPos;
 %         hi5Target_semiAssisted.hi5Velocity = hi5Velocity;
@@ -333,6 +344,10 @@ switch exp_num
         current = 0;
         
         trial_num = 1;
+        
+        dataW =  typecast(single([4 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         while(trial_num <= total_trial_num)
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
@@ -388,7 +403,7 @@ switch exp_num
                 end
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                newV = typecast(single(data_box), 'int8')
+                newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
 %                 velocity_array = [velocity_array velocity_10_array];
@@ -411,7 +426,6 @@ switch exp_num
             error_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
-            disp('end of trial');
         end
         hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
         hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
@@ -457,6 +471,10 @@ switch exp_num
         trial_index = 1;
         
         block_num = 1;
+        
+        dataW =  typecast(single([4 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         flush(ur)
         while(block_num <= total_block_num)
             trial_num = 1;
@@ -493,6 +511,9 @@ switch exp_num
                                 current_10_array(k) = 0;
                                 k = k+1;
                             end
+                            
+                            dataW =  typecast(single([4 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
                             
                             data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                             newV = typecast(single(data_box), 'int8')
@@ -606,6 +627,10 @@ switch exp_num
         Error = 0;
         block_num = 1;
         trial_index = 1;
+        
+        dataW =  typecast(single([4 0]), 'int8');%set current to 0
+        fwrite(uw, dataW, 'int8');
+        
         flush(ur);
         
         while(block_num <= total_block_num)
@@ -710,7 +735,7 @@ switch exp_num
                     while k <= 10
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_position = typecast(dataR, 'single');
-                        subject_traj = -(subject_position)*90/6400;
+                        subject_traj = -(subject_position)*90/6400;6
                         subject_traj_10_array(k) = subject_traj;
                         strength_10_array(k) = strength;
                         k = k+1;
@@ -757,6 +782,7 @@ switch exp_num
     case 6 %grip tracking
         fclose(u2)
         fopen(u2);
+        flush(u_force);
         total_trial_num = 2;
         trial_length = 10;
         disp('Task 6: grip tracking')
@@ -770,6 +796,7 @@ switch exp_num
         gripforce = {};
         gripforce_target = {};
         gripforce_error = {};
+        
         
         while(trial_num <= total_trial_num)
             c = clock;
@@ -849,6 +876,7 @@ switch exp_num
     case 7 %grip force maintain
         fclose(u2)
         fopen(u2);
+        flush(u_force);
         disp('Task 7: grip force maintain')
         force_array = [];
         force_target_array = [];

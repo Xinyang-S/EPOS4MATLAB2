@@ -36,10 +36,9 @@ mode = 0;
 init = 0;
 filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0; 
 while(1)
-    tic
     encoder = Motor1.ActualPosition - encoderStart;
     %calculate error velocity
-    posError = encoder - trajectory;
+    posError = encoder - trajectory*6400/90;
     posErrorDiffNew = posError - posErrorPrev;
     posErrorDiff = posErrorDiff*(filterLP_D) + posErrorDiffNew*(1-filterLP_D); %damper can cause small vibrations 
     posErrorPrev = posError;
@@ -79,13 +78,12 @@ while(1)
         dataR1 = typecast(dataR, 'single');
         mode = dataR1(1);
 %         trajectory = dataR1(2)*6400/90;
-        trajectory = dataR1(2)
+        trajectory = dataR1(2);
         time_array = [time_array c2];
         trajectory_array = [trajectory_array trajectory];
     catch
         continue
     end
-        toc
 end
 
 %%
