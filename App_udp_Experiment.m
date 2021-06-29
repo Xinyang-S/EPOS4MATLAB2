@@ -1,6 +1,6 @@
 %% initialize UPD ports and arrays
 %addpath 
-clear u1 u2 u3 u4 u_force ur
+clear u1 u2 u3 u4 u_force ur ur_rda
 u4 = udpport("LocalPort",1000,'TimeOut',100);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
@@ -10,37 +10,41 @@ port = 5566;
 ur = udpport('LocalPort', port+2);
 uw = udp('LocalHost', port+1);
 
+port_rda = 6666; 
+uw_rda = udp('LocalHost', port_rda+1,'timeout',100);
+ur_rda = udpport('LocalPort', port_rda+2);
+
 data_string = [];
 Error_array = [];
 
 hi5Torque = {};
 hi5Position = {};
 
-% Change for individual recorder host
-recorderip = '127.0.0.1';
-eegall = [];
-% Establish connection to BrainVision Recorder Software 32Bit RDA-Port
-% (use 51234 to connect with 16Bit Port)
-
-con = pnet('tcpconnect', recorderip, 51244,'type',1);
-
-% Check established connection and display a message
-stat = pnet(con,'status');
-if stat > 0
-    disp('connection established');
-end
-
-
-% --- Main reading loop ---
-header_size = 24;
-
-%eeg init
- eeg_data = [];
- props = [];
-[~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
-[~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
-
-con = pnet('tcpconnect', recorderip, 51244,'type',4);
+% % Change for individual recorder host
+% recorderip = '127.0.0.1';
+% eegall = [];
+% % Establish connection to BrainVision Recorder Software 32Bit RDA-Port
+% % (use 51234 to connect with 16Bit Port)
+% 
+% con = pnet('tcpconnect', recorderip, 51244,'type',1);
+% 
+% % Check established connection and display a message
+% stat = pnet(con,'status');
+% if stat > 0
+%     disp('connection established');
+% end
+% 
+% 
+% % --- Main reading loop ---
+% header_size = 24;
+% 
+% %eeg init
+%  eeg_data = [];
+%  props = [];
+% % [~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
+% [~, props,l] = get_eeg_modified(recorderip, con, stat, header_size, props);
+% 
+% con = pnet('tcpconnect', recorderip, 51244,'type',4,'timeout',0.001);
 %% Run Python Code Here to activate Grip sensor
 % StartGripSensor()
 
@@ -67,8 +71,12 @@ switch exp_num
         
         fopen(uw);
         fopen(u2);
+        fopen(uw_rda);
         %read data from robot matlab ( encoder )
         flush(ur);
+        flush(ur_rda);
+        
+        
         
         dataW =  typecast(single([0 0]), 'int8');%set zero position
         fwrite(uw, dataW, 'int8');
@@ -108,7 +116,7 @@ switch exp_num
             clockCurrent = clockStart;
             flush(ur);
             while (clockCurrent < clockStart + trial_length + 5)
-            tic  
+                
                 if clockCurrent < (clockStart+5)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
@@ -139,8 +147,9 @@ switch exp_num
                 else
                 
                 k = 1;
-                
+%                 flush(ur_rda)
                 while k <= 10
+                    
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     % subject position
@@ -157,17 +166,32 @@ switch exp_num
                     
                     target_traj = 2*18.51*(sin((elapsed_time - 5)*pi/1.547)*sin((elapsed_time - 5)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
-                    tic
-                    [eeg_current, props,j] = get_eeg(recorderip, con, stat, header_size, props);
-                    j
-                    eeg_data = [eeg_data eeg_current];
-                    toc
+                    
+                    
+%                     [eeg_current, props,j, a, b, t] = get_eeg_modified(recorderip, con, stat, header_size, props);
+%                    
+%                     eeg_data = [eeg_data eeg_current];
+
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+%                         for i = 1:33:628
+%                             eeg_data = [eeg_data eeg_data_vector(i:i+32)'];
+%                         end
+                    end
+
+
                     dataW =  typecast(single([2 target_traj]), 'int8');
                     fwrite(uw, dataW, 'int8');
                     k = k+1;
                     
-                    
                 end
+                
+                
+                
+                dataW =  typecast(single([4 0]), 'int8');
+                fwrite(uw, dataW, 'int8');
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -178,7 +202,6 @@ switch exp_num
                 target_traj_array = [target_traj_array target_traj_10_array];
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
-            toc
             end
 %             Motor1.MotionWithCurrent(0);
             dataW =  typecast(single([4 0]), 'int8');
@@ -211,6 +234,7 @@ switch exp_num
         
         fclose(u2);
         fclose(uw);
+        fclose(uw_rda);
 %------------------------Semi-assisted target tracking---------------------
     case 2 %hi5 semi-assisted target tracking
         fopen(uw);
@@ -595,7 +619,7 @@ switch exp_num
                     end
 
                     data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
 %                     velocity_array = [velocity_array velocity_10_array];
@@ -659,8 +683,8 @@ switch exp_num
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
-        subject_traj_10_array = [];
-        strength_10_array = [];
+        subject_traj_10_array = zeros(1,10);
+        strength_10_array = zeros(1,10);
         currentPrev=0;
         current=0;
         
@@ -720,69 +744,72 @@ switch exp_num
                         clockStart = clockCurrent;
                     end
                     
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-%                     clockStart = clockCurrent;
-                    elapsed_time = clockCurrent - clockStart;
-                    
-                    if (elapsed_time > 3)
-                        strength = 0;
-                    end
-                    
-                    switch strength
-                        case 0
-                            current = 0;
-                        case 1
-                            current = -2000;
-                        case 2
-                            current = -3000;
-                        case 3 
-                            current = -4000;
-%                         case 1
-%                             if (elapsed_time > 3.5)
-%                                 current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-%                                 
-%                             elseif (elapsed_time > 0.5)
-%                                 current = -2000;
-%                             elseif (elapsed_time > 0)
-%                                 current=-2000*(2*(elapsed_time));
-%                             end
-%                         case 2
-%                             if (elapsed_time > 3.5)
-%                                 current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-%                                 
-%                             elseif (elapsed_time > 0.5)
-%                                 current = -3000;
-%                             elseif (elapsed_time > 0)
-%                                 current=-3000*(2*(elapsed_time));
-%                             end
-%                         case 3
-%                             if (elapsed_time > 3.5)
-%                                 current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-%                                 
-%                             elseif (elapsed_time > 0.5)
-%                                 current = -4000;
-%                             elseif (elapsed_time > 0)
-%                                 current=-4000*(2*(elapsed_time));
-%                             end
-                    end
-
-                    current = safetyCheck(current);
-                    dataW =  typecast(single([3 current]), 'int8');
-                    fwrite(uw, dataW, 'int8');
-                    
                     k = 1;
                     while k <= 10
+                        
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+    %                     clockStart = clockCurrent;
+                        elapsed_time = clockCurrent - clockStart;
+
+                        if (elapsed_time > 4)
+                            strength = 0;
+                        end
+                    
+                        switch strength
+                            case 0
+                                current = 0;
+    %                         case 1
+    %                             current = -2000;
+    %                         case 2
+    %                             current = -3000;
+    %                         case 3 
+    %                             current = -4000;
+                            case 1
+                                if (elapsed_time > 3.5)
+                                    current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                elseif (elapsed_time > 0.5)
+                                    current = -2000;
+                                elseif (elapsed_time > 0)
+                                    current=-2000*(2*(elapsed_time));
+                                end
+                            case 2
+                                if (elapsed_time > 3.5)
+                                    current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                elseif (elapsed_time > 0.5)
+                                    current = -3000;
+                                elseif (elapsed_time > 0)
+                                    current=-3000*(2*(elapsed_time));
+                                end
+                            case 3
+                                if (elapsed_time > 3.5)
+                                    current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                elseif (elapsed_time > 0.5)
+                                    current = -4000;
+                                elseif (elapsed_time > 0)
+                                    current=-4000*(2*(elapsed_time));
+                                end
+                        end
+
+                        current = safetyCheck(current);
+                        dataW =  typecast(single([3 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+                        
+                        
+                        
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_position = typecast(dataR, 'single');
-                        subject_traj = -(subject_position)*90/6400;6
+                        subject_traj = -(subject_position)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         strength_10_array(k) = strength;
                         k = k+1;
                     end
                     data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
                     
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
 %                     velocity = Motor1.ActualVelocity;
 %                     velocity_array = [velocity_array velocity];
@@ -823,6 +850,7 @@ switch exp_num
         fclose(u2)
         fopen(u2);
         flush(u_force);
+        flush(ur_rda);
         total_trial_num = 2;
         trial_length = 10;
         disp('Task 6: grip tracking')
@@ -855,8 +883,8 @@ switch exp_num
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         elapsed_time(k) = clockCurrent - clockStart;
                         
-                        [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
-                        eeg_data = [eeg_data eeg_current];
+%                         [eeg_current, props] = get_eeg_modified(recorderip, con, stat, header_size, props);
+%                         eeg_data = [eeg_data eeg_current];
                         
                         k = k+1;
                     end
@@ -885,13 +913,22 @@ switch exp_num
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         elapsed_time(k) = clockCurrent - clockStart;
                         
-                        [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
-                        eeg_data = [eeg_data eeg_current];
+                        
+                        if mod(k,2) == 0
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        end
                         
                         k = k+1;
                     end
                     force_target =2.*18.51.*(sin((elapsed_time-traj_start_time+10).*pi/1.547).*sin((elapsed_time-traj_start_time+10).*pi/2.875));
                     force = read(u_force,10,'single');
+                    
+                    flush(u_force)
+                    
+%                     force = zeros(1,10);
+
     %                 ErrorSample = sqrt((force_target-force).^2);
     %                 Error_array = [Error_array ErrorSample];
     %                 Error = mean(Error_array);
@@ -921,6 +958,7 @@ switch exp_num
         end
         gripTrack.gripForce = gripforce;
         gripTrack.gripForceTarget = gripforce_target;
+        gripTrack.EEG = gripforce_eeg;
 %         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
         fclose(u2)
@@ -968,17 +1006,24 @@ switch exp_num
                             c = clock;
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                             force = read(u_force,10,'single');
+                            
+                            [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
+                            eeg_data = [eeg_data eeg_current];
 
                             data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
         %                     disp(data_box);
-                            newV = typecast(single(data_box), 'int8')
+                            newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                         end
                         block_flag = ~block_flag;
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
+                        eeg_data = [];
                     end
+                    
+                    get_eeg(recorderip, con, stat, header_size, props);
+
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     if (clockCurrent > clockStart + 3)
@@ -994,12 +1039,18 @@ switch exp_num
                         strength_10_array(k) = strength;
                         elapsed_time_10_array(k) = elapsed_time;
                         
+                        tic
+                        [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
+                        eeg_data = [eeg_data eeg_current];
+                        toc
+                        
                         k = k+1;
+                        
                     end
                     
                     data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
 %                     disp(data_box);
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     force_array = [force_array force];
                     force_target_array = [force_target_array strength_10_array];
@@ -1008,8 +1059,10 @@ switch exp_num
                 force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;
                 gripforce_target.(force_name) = force_target_array;
+                gripforce_eeg.(force_name) = eeg_data;
                 force_target_array = [];
                 force_array = [];
+                eeg_data = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
                 disp('end of trial');
@@ -1018,7 +1071,8 @@ switch exp_num
             disp(['Block number: ', num2str(block_num)]);
         end
         gripForceMaintain.gripforce = gripforce;
-        gripForceMaintain.gripforcetarget = gripforce_target;
+        gripForceMaintain.gripforceTarget = gripforce_target;
+        gripForceMaintain.EEG = gripforce_eeg;
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
         
@@ -1029,6 +1083,8 @@ switch exp_num
             fopen(u2);
 
             flush(ur)
+            
+            flush(ur_rda);
             
             dataW =  typecast(single([0 0]), 'int8');%set current to 0
             fwrite(uw, dataW, 'int8');

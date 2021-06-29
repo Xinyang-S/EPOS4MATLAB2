@@ -1,14 +1,20 @@
-function [eegall, props,j] = get_eeg(recorderip, con, stat, header_size, props)
+function [eegall, props, j, a, b, t] = get_eeg_modified(recorderip, con, stat, header_size, props)
 eegall = [];
 j = 1;
-%try
+a = 0;
+b = 0;
+t = 0;
+try
             % check for existing data in socket buffer
-            tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view', 'noblock');
+            tic
+            tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view','noblock','setreadtimeout',0.001);
             %while ~isempty(tryheader)
+            t = toc;
             while ~isempty(tryheader)%j<=10 &&
                 % Read header of RDA message
                 hdr = ReadHeader(con);
-
+                a = hdr.type;
+                b = hdr.size
                 % Perform some action depending of the type of the data package
                 switch hdr.type
                     case 1       % Start, Setup information like EEG properties
@@ -68,14 +74,14 @@ j = 1;
                         data = pnet(con, 'read', hdr.size - header_size);
 %                         disp('otherwise')
                 end
-                tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view', 'noblock');
+                tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view', 'noblock','setreadtimeout',0.001);
                 j = j+1;
                 %pause(0.01);
             end
-%         catch
-%             er = lasterror;
-%             disp(er.message);
-%end
+        catch
+            er = lasterror;
+            disp(er.message);
+end
         
 
 

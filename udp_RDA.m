@@ -1,13 +1,63 @@
-function [eegall, props,j] = get_eeg(recorderip, con, stat, header_size, props)
-eegall = [];
-j = 1;
-%try
+%% ***********************************************************************   
+% Simple MATLAB RDA Client
+%
+% Demonstration file for implementing a simple MATLAB client for the
+% RDA tcpip interface of the BrainVision Recorder.
+% It reads all information of the recorded EEG,
+% prints EEG and marker information to the
+% MATLAB console and calculates and prints the average power every second.
+%
+%
+% Brain Products GmbH 
+% Gilching/Freiburg, Germany
+% www.brainproducts.com
+%
+%
+% This RDA Client uses version 2.x of the tcp/udp/ip Toolbox by
+% Peter Rydesäter which can be downloaded from the Mathworks website
+%
+% 
+
+%% ***********************************************************************   
+% Main RDA Client function
+function RDA()
+    clear ur_rda
+    port_rda = 6666; 
+    uw_rda = udp('LocalHost', port_rda+2,'timeout',0.1);
+%     uw_rda.OutputBufferSize = 3000;
+    ur_rda = udpport('LocalPort', port_rda+1);
+    fopen(uw_rda);
+        
+    EEGData_vector = [];
+    % Change for individual recorder host
+    recorderip = '127.0.0.1';
+
+    % Establish connection to BrainVision Recorder Software 32Bit RDA-Port
+    % (use 51234 to connect with 16Bit Port)
+    con = pnet('tcpconnect', recorderip, 51244);
+
+    % Check established connection and display a message
+    stat = pnet(con,'status');
+    if stat > 0
+        disp('connection established');
+    end
+
+    
+    % --- Main reading loop ---
+    header_size = 24;
+    finish = false;
+    while ~finish
+        try
+            
             % check for existing data in socket buffer
+
             tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view', 'noblock');
-            %while ~isempty(tryheader)
-            while ~isempty(tryheader)%j<=10 &&
+
+            while ~isempty(tryheader)
+                
                 % Read header of RDA message
                 hdr = ReadHeader(con);
+                
 
                 % Perform some action depending of the type of the data package
                 switch hdr.type
@@ -21,31 +71,42 @@ j = 1;
                         lastBlock = -1;
 
                         % set data buffer to empty
-                        %data1s = [];
+                        data1s = [];
                         
                     case 4       % 32Bit Data block
-%                         disp('case4')
                         % Read data and markers from message
                         [datahdr, data, markers] = ReadDataMessage(con, hdr, props);
 
                         % check tcpip buffer overflow
-%                         if lastBlock ~= -1 && datahdr.block > lastBlock + 1
-%                             disp(['******* Overflow with ' int2str(datahdr.block - lastBlock) ' blocks ******']);
-%                         end
-%                         lastBlock = datahdr.block;
-                       
+                        if lastBlock ~= -1 && datahdr.block > lastBlock + 1
+                            disp(['******* Overflow with ' int2str(datahdr.block - lastBlock) ' blocks ******']);
+                        end
+                        lastBlock = datahdr.block;
+
                         % print marker info to MATLAB console
-%                         if datahdr.markerCount > 0
-%                             for m = 1:datahdr.markerCount
-%                                 disp(markers(m));
-%                             end    
-%                         end
+                        if datahdr.markerCount > 0
+                            for m = 1:datahdr.markerCount
+                                disp(markers(m));
+                            end    
+                        end
 
                         % Process EEG data, 
                         % in this case extract last recorded second,
+                        
                         EEGData = reshape(data, props.channelCount, length(data) / props.channelCount);
-                        eegall = [eegall EEGData];
-                        %disp('eeg');
+%                         disp(length(EEGData));
+                        EEGData_vector = [EEGData(:,1); EEGData(:,2)]';
+%                         EEGData_vector = [EEGData(:,1); EEGData(:,2); EEGData(:,3); EEGData(:,4);...
+%                             EEGData(:,5); EEGData(:,6); EEGData(:,7); EEGData(:,8); EEGData(:,9); EEGData(:,10);...
+%                             EEGData(:,11); EEGData(:,12); EEGData(:,13); EEGData(:,14);...
+%                             EEGData(:,15); EEGData(:,16); EEGData(:,17); EEGData(:,18); EEGData(:,19); EEGData(:,20)]';
+%                         EEGData_vector = [EEGData(:,1); EEGData(:,2); EEGData(:,3); EEGData(:,4);...
+%                             EEGData(:,5); EEGData(:,6); EEGData(:,7); EEGData(:,8); EEGData(:,9); EEGData(:,10)]';
+                        toc
+                        tic
+                        dataW =  typecast(single(EEGData_vector), 'int8');
+                        fwrite(uw_rda, dataW, 'int8');
+                        
 %                         data1s = [data1s EEGData];
 %                         dims = size(data1s);
 %                         if dims(2) > 1000000 / props.samplingInterval
@@ -64,23 +125,26 @@ j = 1;
                         finish = true;
 
                     otherwise    % ignore all unknown types, but read the package from buffer 
-                        
                         data = pnet(con, 'read', hdr.size - header_size);
 %                         disp('otherwise')
                 end
                 tryheader = pnet(con, 'read', header_size, 'byte', 'network', 'view', 'noblock');
-                j = j+1;
-                %pause(0.01);
             end
-%         catch
-%             er = lasterror;
-%             disp(er.message);
-%end
-        
 
+        catch
+            er = lasterror;
+            disp(er.message);
+        end
+    end % Main loop
+    
+    % Close all open socket connections
+    pnet('closeall');
+    
+    % Display a message
+    disp('connection closed');
 
-
-
+    
+    
 
 %% ***********************************************************************
 % Read the message header
@@ -96,7 +160,7 @@ function hdr = ReadHeader(con)
     hdr.uid = pnet(con,'read', 16);
     hdr.size = swapbytes(pnet(con,'read', 1, 'uint32', 'network'));
     hdr.type = swapbytes(pnet(con,'read', 1, 'uint32', 'network'));
-end
+
 
 %% ***********************************************************************   
 % Read the start message
@@ -115,7 +179,7 @@ function props = ReadStartMessage(con, hdr)
     allChannelNames = pnet(con,'read', hdr.size - 36 - props.channelCount * 8);
     props.channelNames = SplitChannelNames(allChannelNames);
 
-end 
+    
 %% ***********************************************************************   
 % Read a data message
 function [datahdr, data, markers] = ReadDataMessage(con, hdr, props)
@@ -132,12 +196,10 @@ function [datahdr, data, markers] = ReadDataMessage(con, hdr, props)
     datahdr.block = swapbytes(pnet(con,'read', 1, 'uint32', 'network'));
     datahdr.points = swapbytes(pnet(con,'read', 1, 'uint32', 'network'));
     datahdr.markerCount = swapbytes(pnet(con,'read', 1, 'uint32', 'network'));
+
     % Read data in float format
-%     data = swapbytes(pnet(con,'read', props.channelCount  , 'single', 'network'));
-try
     data = swapbytes(pnet(con,'read', props.channelCount * datahdr.points, 'single', 'network'));
-catch
-end
+
     % Define markers struct and read markers
     markers = struct('size',[],'position',[],'points',[],'channel',[],'type',[],'description',[]);
     for m = 1:datahdr.markerCount
@@ -166,7 +228,7 @@ end
         % Add marker to array
         markers(m) = marker;  
     end
-end 
+
     
 %% ***********************************************************************   
 % Helper function for channel name splitting, used by function
@@ -193,8 +255,3 @@ function channelNames = SplitChannelNames(allChannelNames)
         end
     end
 
-    
-end 
-
-
-end 

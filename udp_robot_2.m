@@ -34,8 +34,12 @@ DW= 0;
 trajectory = 0;
 mode = 0;
 init = 0;
-filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0; 
+filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0;
+j = 1;
 while(1)
+    if mod(j,50) == 0
+        flush(ur)
+    end
     encoder = Motor1.ActualPosition - encoderStart;
     %calculate error velocity
     posError = encoder - trajectory*6400/90;
@@ -84,6 +88,7 @@ while(1)
     catch
         continue
     end
+    j = j+1;
 end
 
 %%
