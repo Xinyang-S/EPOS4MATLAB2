@@ -37,7 +37,7 @@ init = 0;
 filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0;
 j = 1;
 while(1)
-    if mod(j,50) == 0
+    if mod(j,10) == 0
         flush(ur)
     end
     encoder = Motor1.ActualPosition - encoderStart;
@@ -67,6 +67,8 @@ while(1)
     elseif ( mode == 4 )%zero assistance
         init = 0;
 %         Motor1.MotionWithCurrent(0);
+    elseif (mode == 5)
+        Motor1.MotionWithCurrent(0);
     else
     end
     %write data
@@ -136,7 +138,7 @@ while (clockStart < clockStartPrev + hold)
     posClockDiff = clockStart - posClockPrev;
    
     %if inside wall - current = KW*distance + DW*Velocity
-    current = -1*(KW*posError + DW*posErrorDiff);        
+    current = -1*(KW*posError + DW*posErrorDiff);      
     if (current > currentMaxP)
        current = currentMaxP;
        disp('Wall Too Strong!')
