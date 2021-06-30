@@ -1,7 +1,7 @@
 %% initialize UPD ports and arrays
 %addpath 
 clear u1 u2 u3 u4 u_force ur ur_rda
-u4 = udpport("LocalPort",1000,'TimeOut',100);
+u4 = udpport("LocalPort",1000,'TimeOut',1000);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
 u2 = udp("LocalHost",3000);
@@ -1224,6 +1224,8 @@ switch exp_num
             
             flush(ur_rda);
             
+            current = 0;
+            
             dataW =  typecast(single([0 0]), 'int8');%set current to 0
             fwrite(uw, dataW, 'int8');
 
@@ -1253,6 +1255,8 @@ switch exp_num
             trial_index = 1;
 
             block_num = 1;
+            dataW =  typecast(single([4 0]), 'int8');%set current to 0
+            fwrite(uw, dataW, 'int8');
             flush(ur)
             while(block_num <= total_block_num)
                 trial_num = 1;
@@ -1290,6 +1294,9 @@ switch exp_num
                                     current_10_array(k) = 0;
                                     k = k+1;
                                 end
+                                
+                                dataW =  typecast(single([4 current]), 'int8');
+                                fwrite(uw, dataW, 'int8');
 
                                 data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                                 newV = typecast(single(data_box), 'int8')
@@ -1361,6 +1368,9 @@ switch exp_num
                         target_pos_array = [target_pos_array target_pos_10_array];
                         subject_traj_array = [subject_traj_array subject_traj_10_array];
                     end
+                    
+                    dataW =  typecast(single([5 0]), 'int8');%set current to 0
+                    fwrite(uw, dataW, 'int8');
 
                     posFlag = ~posFlag;
                     if block_num == 1
@@ -1400,14 +1410,14 @@ switch exp_num
         load('hi5Target_fullAssisted.mat');
         load('hi5Target_semiAssisted.mat');
         load('hi5Target_zeroAssisted.mat');
-        load('hi5Position.mat');
+        load('hi5Position_Track.mat');
         load('hi5Torque_Stablization.mat');
         load('gripTrack.mat');
         load('gripForceMaintain.mat');
         load('username.mat');
         dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
         expName=strcat('experimentData_',Username,'_',dt,'.mat');
-        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Positioning','hi5Torque_Stablization','gripTrack','gripForceMaintain')
+        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
         disp(strcat('Data was saved succesfully! The file name is'," ",expName));
         
 end
