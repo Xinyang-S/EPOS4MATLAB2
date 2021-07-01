@@ -102,8 +102,7 @@ function RDA()
 %                             EEGData(:,15); EEGData(:,16); EEGData(:,17); EEGData(:,18); EEGData(:,19); EEGData(:,20)]';
 %                         EEGData_vector = [EEGData(:,1); EEGData(:,2); EEGData(:,3); EEGData(:,4);...
 %                             EEGData(:,5); EEGData(:,6); EEGData(:,7); EEGData(:,8); EEGData(:,9); EEGData(:,10)]';
-                        toc
-                        tic
+                        
                         dataW =  typecast(single(EEGData_vector), 'int8');
                         fwrite(uw_rda, dataW, 'int8');
                         

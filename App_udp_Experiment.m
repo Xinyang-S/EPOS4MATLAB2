@@ -1,7 +1,8 @@
 %% initialize UPD ports and arrays
 %addpath 
-clear u1 u2 u3 u4 u_force ur ur_rda
+clear u1 u2 u3 u4 u_force ur ur_rda u_checkpause
 u4 = udpport("LocalPort",1000,'TimeOut',1000);
+u_checkpause = udpport('LocalPort', 1111,'timeout', 0.01);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
 u2 = udp("LocalHost",3000);
@@ -20,31 +21,6 @@ Error_array = [];
 hi5Torque = {};
 hi5Position = {};
 
-% % Change for individual recorder host
-% recorderip = '127.0.0.1';
-% eegall = [];
-% % Establish connection to BrainVision Recorder Software 32Bit RDA-Port
-% % (use 51234 to connect with 16Bit Port)
-% 
-% con = pnet('tcpconnect', recorderip, 51244,'type',1);
-% 
-% % Check established connection and display a message
-% stat = pnet(con,'status');
-% if stat > 0
-%     disp('connection established');
-% end
-% 
-% 
-% % --- Main reading loop ---
-% header_size = 24;
-% 
-% %eeg init
-%  eeg_data = [];
-%  props = [];
-% % [~, props,l] = get_eeg(recorderip, con, stat, header_size, props);
-% [~, props,l] = get_eeg_modified(recorderip, con, stat, header_size, props);
-% 
-% con = pnet('tcpconnect', recorderip, 51244,'type',4,'timeout',0.001);
 %% Run Python Code Here to activate Grip sensor
 % StartGripSensor()
 
@@ -59,10 +35,12 @@ flush(u4)
 app_data = read(u4,10,'string');
 app_data_string = split(app_data,'');
 disp(app_data)
-exp_num = str2num(app_data_string(2));
-total_trial_num = str2num(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
-trial_length = str2num(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
-total_block_num = str2num(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
+exp_num = str2double(app_data_string(2));
+total_trial_num = str2double(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
+trial_length = str2double(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
+total_block_num = str2double(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
+
+countdown = 2;
 
 switch exp_num
 %     
@@ -121,18 +99,47 @@ switch exp_num
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
-            c = clock;
-            clockStart = c(4)*3600+c(5)*60+c(6);
-            clockCurrent = clockStart;
-            flush(ur);
-            
+            disp('start of trial')
+            disp(trial_num);
             index = randi(length(zero_point_array));
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            while (clockCurrent < clockStart + trial_length + 5)
+            pause_value = 0;
+            
+            try
+                pause = read(u_checkpause,1,'string');
+                pause_string = split(pause,'');
+                pause_value = str2double(pause_string(2));
+                if pause_value == 1
+                    disp('pause value:');
+                    disp(pause_value);
+                end
+            catch
+            end
+            
+            while pause_value
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 0
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+            end
+            
+            flush(ur_rda);
+            flush(ur);
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+            
+            while (clockCurrent < clockStart + trial_length + countdown)
                 
-                if clockCurrent < (clockStart+5)
+                if clockCurrent < (clockStart+countdown)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
                     while k <= 10
@@ -203,7 +210,7 @@ switch exp_num
                     k = k+1;
                     
                 end
-                
+                flush(ur)
 %                 velocity_array = [velocity_array velocity_10_array];
 %                 current_array = [current_array current_10_array];
                 target_traj_array = [target_traj_array target_traj_10_array];
@@ -234,7 +241,8 @@ switch exp_num
             current_array = [];
             Error_array = [];
             eeg_data = [];
-            disp(trial_num);
+            
+            disp('end of trial');
             trial_num = trial_num+1;
             % time for ready count down in AppDesigner
         end
@@ -303,6 +311,35 @@ switch exp_num
         
         while(trial_num <= total_trial_num)
             data_box=[];
+            
+            pause_value = 0;
+            
+            try
+                pause = read(u_checkpause,1,'string');
+                pause_string = split(pause,'');
+                pause_value = str2double(pause_string(2));
+                if pause_value == 1
+                    disp('pause value:');
+                    disp(pause_value);
+                end
+            catch
+            end
+            
+            while pause_value
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 0
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+            end
+            
+            flush(ur_rda);
+            flush(ur);
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
@@ -311,9 +348,9 @@ switch exp_num
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            while (clockCurrent < clockStart + trial_length + 5)
+            while (clockCurrent < clockStart + trial_length + countdown)
 
-                if clockCurrent < (clockStart+5)
+                if clockCurrent < (clockStart + countdown)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
                     while k <= 10
@@ -337,7 +374,7 @@ switch exp_num
                     
                     
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     disp('Wrote!')
                 else
@@ -373,10 +410,10 @@ switch exp_num
                     
                         k = k+1;
                     end
+                    flush(ur)
                     target_traj_array = [target_traj_array target_traj_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
-                toc
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
@@ -454,6 +491,7 @@ switch exp_num
         eeg_data = [];
         currentPrev=0;
         current = 0;
+        Error = 0;
         
         trial_num = 1;
         
@@ -472,6 +510,36 @@ switch exp_num
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
+            
+            pause_value = 0;
+            
+            try
+                pause = read(u_checkpause,1,'string');
+                pause_string = split(pause,'');
+                pause_value = str2double(pause_string(2));
+                if pause_value == 1
+                    disp('pause value:');
+                    disp(pause_value);
+                end
+            catch
+            end
+            
+            while pause_value
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 0
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+            end
+            
+            flush(ur_rda);
+            flush(ur);
+            
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
@@ -480,8 +548,8 @@ switch exp_num
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            while (clockCurrent < clockStart + trial_length + 5)
-                if clockCurrent < (clockStart+5)
+            while (clockCurrent < clockStart + trial_length + countdown)
+                if clockCurrent < (clockStart + countdown)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
                     while k <= 10
@@ -538,6 +606,7 @@ switch exp_num
                         
                         k = k+1;
                     end
+                    flush(ur)
                     target_traj_array = [target_traj_array target_traj_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
@@ -632,6 +701,36 @@ switch exp_num
                 position_array = [position_array 40 20 -10 -20];
             end
             while(trial_num <= total_trial_num)
+                
+                pause_value = 0;
+            
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 1
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+
+                while pause_value
+                    try
+                        pause = read(u_checkpause,1,'string');
+                        pause_string = split(pause,'');
+                        pause_value = str2double(pause_string(2));
+                        if pause_value == 0
+                            disp('pause value:');
+                            disp(pause_value);
+                        end
+                    catch
+                    end
+                end
+
+                flush(ur_rda);
+                flush(ur);
+                
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
@@ -665,7 +764,7 @@ switch exp_num
                             fwrite(uw, dataW, 'int8');
                             
                             data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                            newV = typecast(single(data_box), 'int8')
+                            newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                         end
                         block_flag = ~block_flag;
@@ -709,7 +808,6 @@ switch exp_num
                         k = k+1;
                     end
                     
-                    flush(ur)
 
                     data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
@@ -809,6 +907,36 @@ switch exp_num
             block_flag = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
+                
+                pause_value = 0;
+            
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 1
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+
+                while pause_value
+                    try
+                        pause = read(u_checkpause,1,'string');
+                        pause_string = split(pause,'');
+                        pause_value = str2double(pause_string(2));
+                        if pause_value == 0
+                            disp('pause value:');
+                            disp(pause_value);
+                        end
+                    catch
+                    end
+                end
+
+                flush(ur_rda);
+                flush(ur);
+                
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
                 clockCurrent = clockStart;
@@ -914,6 +1042,8 @@ switch exp_num
                         strength_10_array(k) = strength;
                         k = k+1;
                     end
+                    
+                    flush(ur)
                     data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
                     
                     newV = typecast(single(data_box), 'int8');
@@ -992,20 +1122,50 @@ switch exp_num
         
         
         while(trial_num <= total_trial_num)
-            
-            
-            c = clock;
-            clockStart = c(4)*3600+c(5)*60+c(6);
-            clockCurrent = clockStart; 
+            disp('start of trial');
+            disp(trial_num);
+             
             Error_array = [];
             Error = 0;
             
+            pause_value = 0;
+            
+            try
+                pause = read(u_checkpause,1,'string');
+                pause_string = split(pause,'');
+                pause_value = str2double(pause_string(2));
+                if pause_value == 1
+                    disp('pause value:');
+                    disp(pause_value);
+                end
+            catch
+            end
+            
+            while pause_value
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 0
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+            end
+            
+            flush(ur_rda);
+            
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+        
             index = randi(length(zero_point_array));
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            while (clockCurrent < clockStart + trial_length + 5)
-                if clockCurrent < (clockStart + 5) % countdown
+            while (clockCurrent < clockStart + trial_length + countdown)
+                if clockCurrent < (clockStart + countdown) % countdown
                     k = 1;
                     while k <= 10
                         c = clock;
@@ -1023,9 +1183,9 @@ switch exp_num
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                     elapsed_time = [];
 
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
-                elseif clockCurrent >= clockStart + 5 % in trial
+                elseif clockCurrent >= (clockStart + countdown) % in trial
                     
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
@@ -1045,7 +1205,7 @@ switch exp_num
                         
                         k = k+1;
                     end
-                    force_target =2.*18.51.*(sin((elapsed_time- 5 + zero_point).*pi/1.547).*sin((elapsed_time- 5 + zero_point).*pi/2.875));
+                    force_target = -2.*18.51.*(sin((elapsed_time - 5 + zero_point).*pi/1.547).*sin((elapsed_time- 5 + zero_point).*pi/2.875));
                     force = read(u_force,10,'single');
                     
                     flush(u_force)
@@ -1058,7 +1218,7 @@ switch exp_num
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
                     
 
-                    newV = typecast(single(data_box), 'int8')
+                    newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     force_array = [force_array force];
                     force_target_array = [force_target_array force_target];
@@ -1076,7 +1236,6 @@ switch exp_num
             force_array = [];
             Error_array = [];
             eeg_data = [];
-            disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
         end
@@ -1120,6 +1279,38 @@ switch exp_num
             trial_num = 1;
             block_flag = 1;
             while(trial_num <= total_trial_num)
+                
+                pause_value = 0;
+            
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 1
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+
+                while pause_value
+                    try
+                        pause = read(u_checkpause,1,'string');
+                        pause_string = split(pause,'');
+                        pause_value = str2double(pause_string(2));
+                        if pause_value == 0
+                            disp('pause value:');
+                            disp(pause_value);
+                        end
+                    catch
+                    end
+                end
+
+                flush(ur_rda);
+                flush(ur);
+                
+                
+                disp('start of trial');
                 disp(['Trial index: ', num2str(trial_index)]);
                 c = clock;
                 clockStart = c(4)*3600+c(5)*60+c(6);
@@ -1185,6 +1376,7 @@ switch exp_num
                         k = k+1;
                         
                     end
+                    flush(u_force)
                     
                     data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
 %                     disp(data_box);
@@ -1265,6 +1457,35 @@ switch exp_num
                     position_array = [position_array 40 20 -10 -20];
                 end
                 while(trial_num <= total_trial_num)
+                    
+                    pause_value = 0;
+            
+                    try
+                        pause = read(u_checkpause,1,'string');
+                        pause_string = split(pause,'');
+                        pause_value = str2double(pause_string(2));
+                        if pause_value == 1
+                            disp('pause value:');
+                            disp(pause_value);
+                        end
+                    catch
+                    end
+
+                    while pause_value
+                        try
+                            pause = read(u_checkpause,1,'string');
+                            pause_string = split(pause,'');
+                            pause_value = str2double(pause_string(2));
+                            if pause_value == 0
+                                disp('pause value:');
+                                disp(pause_value);
+                            end
+                        catch
+                        end
+                    end
+
+                    flush(ur_rda);
+                    flush(ur);
                     c = clock;
                     clockStart = c(4)*3600+c(5)*60+c(6);
                     clockCurrent = clockStart;
