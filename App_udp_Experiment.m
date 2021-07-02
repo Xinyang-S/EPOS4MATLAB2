@@ -694,6 +694,7 @@ switch exp_num
         trial_index = 1;
         
         block_num = 1;
+        speeds=[0,1];
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -702,6 +703,11 @@ switch exp_num
         while(block_num <= total_block_num)
             trial_num = 1;
             block_flag = 1;
+            
+            speed_index = randi(size(speeds));
+            speedFlag = speeds(index);
+            speeds(index) = [];
+
             for i =1:1:total_trial_num/8 
                 position_array = [position_array 40 20 -10 -20];
             end
@@ -814,7 +820,7 @@ switch exp_num
                     end
                     
 
-                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) speedFlag];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
@@ -828,9 +834,9 @@ switch exp_num
                 fwrite(uw, dataW, 'int8');
                 
                 posFlag = ~posFlag;
-                if block_num == 1
+                if speedFlag == 0
                     trial_name = strcat('Slow_trial',num2str(trial_index));
-                elseif block_num == 2
+                elseif speedFlag == 1
                     trial_name = strcat('Fast_trial',num2str(trial_index));
                 end
                 
