@@ -483,6 +483,7 @@ switch exp_num
         target_traj_10_array = zeros(1,10);
         velocity_10_array = zeros(1,10);
         current_10_array = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -566,12 +567,14 @@ switch exp_num
                         elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
                         
+                        trial_num_10_array(k) = trial_num;
+                        
                         dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
 
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
@@ -591,7 +594,9 @@ switch exp_num
                         % target position
                         elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
-
+                        
+                        trial_num_10_array(k) = trial_num;
+                        
                         target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
                         target_traj_10_array(k) = target_traj;
                         
@@ -613,7 +618,7 @@ switch exp_num
                 
                 flush(ur)
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
