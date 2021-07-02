@@ -1131,13 +1131,13 @@ switch exp_num
         gripforce_eeg = {};
         gripZeroPoint = {};
         
-        zero_point_array = 10.035.*ones(1,(total_trial_num));
+        zero_point_array = 10.058.*ones(1,(total_trial_num));
         j = 1;
         for i = 1:(floor(((total_trial_num))/3)):(((total_trial_num)) - (floor(((total_trial_num))/3))+1)
             if j == 1
-                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 24.029;
+                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 24.085;
             elseif j == 2
-                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 30.104;
+                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 30.172;
             end
             j = j+1;
         end
