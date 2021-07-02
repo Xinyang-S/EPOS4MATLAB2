@@ -709,9 +709,9 @@ switch exp_num
             trial_num = 1;
             block_flag = 1;
             
-            speed_index = randi(size(speeds));
-            speedFlag = speeds(index);
-            speeds(index) = [];
+            speed_index = randi(length(speeds));
+            speedFlag = speeds(speed_index);
+            speeds(speed_index) = [];
 
             for i =1:1:total_trial_num/8 
                 position_array = [position_array 40 20 -10 -20];
@@ -764,7 +764,7 @@ switch exp_num
                                 c = clock;
                                 clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                                 elapsed_time = clock_count_down_current - clock_count_down_start;
-                                elapsed_time_10_array(k) = elapsed_time;
+                                elapsed_time_10_array(k) = 0;
 
                                 % subject position
                                 dataR = int8(read(ur, 4, 'int8'));
@@ -779,7 +779,7 @@ switch exp_num
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
                             
-                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) speedFlag];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                         end
@@ -805,7 +805,7 @@ switch exp_num
                         
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        elapsed_time = clockCurrent - clockStart;
+                        elapsed_time = clockCurrent - clockStart
                         elapsed_time_10_array(k) = elapsed_time;
                         
                         % subject position
