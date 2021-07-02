@@ -627,7 +627,7 @@ switch exp_num
                 
                 flush(ur)
                 
-                error_array = [error_array (target_traj-subject_traj)^2];
+                error_array = [error_array abs(mean(target_traj_10_array) + mean(subject_traj_10_array))];
                 Error = mean(error_array);
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
