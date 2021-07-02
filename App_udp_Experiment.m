@@ -712,6 +712,11 @@ switch exp_num
             speed_index = randi(length(speeds));
             speedFlag = speeds(speed_index);
             speeds(speed_index) = [];
+            
+            data_box = [zeros(10) zeros(10) roundn(Error,-5) zeros(10) speedFlag];
+            newV = typecast(single(data_box), 'int8');
+            fwrite(u2, newV, 'int8')
+                    
 
             for i =1:1:total_trial_num/8 
                 position_array = [position_array 40 20 -10 -20];
@@ -764,7 +769,7 @@ switch exp_num
                                 c = clock;
                                 clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                                 elapsed_time = clock_count_down_current - clock_count_down_start;
-                                elapsed_time_10_array(k) = 0;
+                                elapsed_time_10_array(k) = elapsed_time;
 
                                 % subject position
                                 dataR = int8(read(ur, 4, 'int8'));
