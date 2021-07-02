@@ -1205,7 +1205,7 @@ switch exp_num
                         
                         k = k+1;
                     end
-                    force_target = -2.*18.51.*(sin((elapsed_time - 5 + zero_point).*pi/1.547).*sin((elapsed_time- 5 + zero_point).*pi/2.875));
+                    force_target = 2.*18.51.*(sin((elapsed_time - countdown + zero_point).*pi/1.547).*sin((elapsed_time - countdown + zero_point).*pi/2.875));
                     force = read(u_force,10,'single');
                     
                     flush(u_force)
@@ -1338,6 +1338,8 @@ switch exp_num
                             c = clock;
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                             force = read(u_force,10,'single');
+                            
+                            
 
                             data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
         %                     disp(data_box);
