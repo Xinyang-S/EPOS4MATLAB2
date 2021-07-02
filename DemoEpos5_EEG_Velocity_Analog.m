@@ -55,6 +55,7 @@ while (trialNum<trials)
         clockPrev = clockNew; 
         Motor1.SetWithAnalog(1,0); % trigger, analog output pin, analog mV value, max 4000
         Motor1.SetWithAnalog(1,3500); % untrigger, analog output pin, analog mV value, max 4000
+        
         while(clockNew < (clockPrev + wait) && Motor1.ActualPosition < startPosition + maxPosShiftP && Motor1.ActualCurrent < maxCurrent)    
             Motor1.SetWithAnalog(2,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
             c = clock;

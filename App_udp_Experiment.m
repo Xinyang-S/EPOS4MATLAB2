@@ -496,6 +496,8 @@ switch exp_num
         currentPrev=0;
         current = 0;
         Error = 0;
+        target_traj = 0;
+        subject_traj = 0;
         
         trial_num = 1;
         
@@ -578,7 +580,9 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
-
+                    
+                    
+                    
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -622,6 +626,9 @@ switch exp_num
                 end
                 
                 flush(ur)
+                
+                error_array = [error_array (target_traj-subject_traj)^2];
+                Error = mean(error_array);
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -713,7 +720,7 @@ switch exp_num
             speedFlag = speeds(speed_index);
             speeds(speed_index) = [];
             
-            data_box = [zeros(10) zeros(10) roundn(Error,-5) zeros(10) speedFlag];
+            data_box = [zeros(1,10) zeros(1,10) roundn(Error,-5) zeros(1,10) speedFlag];
             newV = typecast(single(data_box), 'int8');
             fwrite(u2, newV, 'int8')
                     
