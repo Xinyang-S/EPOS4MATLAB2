@@ -1099,6 +1099,7 @@ switch exp_num
         force_target_array = [];
         Error_array = [];
         elapsed_time = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         force_target = [];
         eeg_data = [];
         trial_num = 1;
@@ -1170,8 +1171,8 @@ switch exp_num
                     while k <= 10
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        elapsed_time(k) = clockCurrent - clockStart;
-                        
+%                         elapsed_time(k) = clockCurrent - clockStart;
+                        trial_num_10_array(k) = trial_num;
 %                         [eeg_current, props] = get_eeg_modified(recorderip, con, stat, header_size, props);
 %                         eeg_data = [eeg_data eeg_current];
                         
@@ -1180,8 +1181,8 @@ switch exp_num
                     
                     force_target = -[37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02];
                     force = read(u_force,10,'single');
-                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
-                    elapsed_time = [];
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    
 
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -1195,7 +1196,7 @@ switch exp_num
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         elapsed_time(k) = clockCurrent - clockStart;
-                        
+                        trial_num_10_array(k) = trial_num;
                         
                         if mod(k,2) == 0
                             dataR_rda = int8(read(ur_rda, 264, 'int8'));
@@ -1215,7 +1216,8 @@ switch exp_num
     %                 ErrorSample = sqrt((force_target-force).^2);
     %                 Error_array = [Error_array ErrorSample];
     %                 Error = mean(Error_array);
-                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time, -5)];
+                    
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                     
 
                     newV = typecast(single(data_box), 'int8');
