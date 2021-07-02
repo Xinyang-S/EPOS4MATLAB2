@@ -91,7 +91,7 @@ switch exp_num
             if j == 1
                 zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 3.094;
             elseif j == 2
-                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.235;
+                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.375;
             end
             j = j+1;
         end
@@ -304,7 +304,7 @@ switch exp_num
             if j == 1
                 zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 3.094;
             elseif j == 2
-                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.235;
+                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.375;
             end
             j = j+1;
         end
@@ -505,7 +505,7 @@ switch exp_num
             if j == 1
                 zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 3.094;
             elseif j == 2
-                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.235;
+                zero_point_array(i:(i+(floor(((total_trial_num))/3))-1)) = 14.375;
             end
             j = j+1;
         end
