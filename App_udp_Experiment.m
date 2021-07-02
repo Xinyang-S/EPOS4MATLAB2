@@ -6,6 +6,8 @@ u_checkpause = udpport('LocalPort', 1111,'timeout', 0.01);
 % u2 = udpport("LocalPort",3000); % open udp for FES pw from simulink, clear port if error
 u_force = udpport('LocalPort',1263);
 u2 = udp("LocalHost",3000);
+u2.InputBufferSize = 250;
+u2.OutputBufferSize = 250;
 
 port = 5566;
 ur = udpport('LocalPort', port+2);
@@ -139,7 +141,6 @@ switch exp_num
             clockCurrent = clockStart;
             
             while (clockCurrent < clockStart + trial_length + countdown)
-                
                 if clockCurrent < (clockStart+countdown)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
@@ -724,7 +725,7 @@ switch exp_num
             newV = typecast(single(data_box), 'int8');
             fwrite(u2, newV, 'int8')
                     
-
+            data_box = [];
             for i =1:1:total_trial_num/8 
                 position_array = [position_array 40 20 -10 -20];
             end
@@ -765,6 +766,8 @@ switch exp_num
                 executed = 0;
                 
                 while (clockCurrent < clockStart + trial_length)
+                    toc
+                    tic
                     if mod(trial_index, total_trial_num) == 1 && (block_flag == 1)
                         c = clock;
                         clock_count_down_start = c(4)*3600+c(5)*60+c(6);
@@ -794,6 +797,7 @@ switch exp_num
                             data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) speedFlag];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
+                            data_box = [];
                         end
                         block_flag = ~block_flag;
                         c = clock;
@@ -827,9 +831,9 @@ switch exp_num
                         subject_traj_10_array(k) = subject_traj;
                         
                         if mod(k,2) == 0
-                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                        eeg_data_vector = typecast(dataR_rda, 'single');
-                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
                         
                         current_10_array(k) = 0;
@@ -837,10 +841,10 @@ switch exp_num
                     end
                     
 
-                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) speedFlag];
+                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) round(speedFlag)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
-                    
+                    data_box = [];
 %                     velocity_array = [velocity_array velocity_10_array];
 %                     current_array = [current_array current_10_array];
                     target_pos_array = [target_pos_array target_pos_10_array];
