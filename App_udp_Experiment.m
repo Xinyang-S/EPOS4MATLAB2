@@ -810,7 +810,7 @@ switch exp_num
                         
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        elapsed_time = clockCurrent - clockStart
+                        elapsed_time = clockCurrent - clockStart;
                         elapsed_time_10_array(k) = elapsed_time;
                         
                         % subject position
