@@ -221,7 +221,11 @@ switch exp_num
                 subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
+                Error = mean(error_array);
+                Score = 120 - Error/3;
+                
+                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
                 
@@ -288,11 +292,12 @@ switch exp_num
         target_traj_10_array = zeros(1,10);
         velocity_10_array = zeros(1,10);
         current_10_array = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
-        Error_array = [];
+        error_array = [];
         eeg_data = [];
         currentPrev=0;
         current = 0;
@@ -368,8 +373,10 @@ switch exp_num
                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
-                        elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time = clockCurrent - clockStart;
+%                         elapsed_time_10_array(k) = elapsed_time;
+                        
+                        trial_num_10_array(k) = trial_num;
                         
                         dataW =  typecast(single([5 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
@@ -377,7 +384,7 @@ switch exp_num
                     end
                     
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     disp('Wrote!')
@@ -397,8 +404,10 @@ switch exp_num
 
                         % target position
                         elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
-
+%                         elapsed_time_10_array(k) = elapsed_time;
+                        
+                        trial_num_10_array(k) = trial_num;
+                        
                         target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
                         target_traj_10_array(k) = target_traj;
                         
@@ -418,7 +427,12 @@ switch exp_num
                     target_traj_array = [target_traj_array target_traj_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                
+                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
+                Error = mean(error_array);
+                Score = 120 - Error/3;
+                
+                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
@@ -628,10 +642,11 @@ switch exp_num
                 
                 flush(ur)
                 
-                error_array = [error_array abs(mean(target_traj_10_array) + mean(subject_traj_10_array))];
+                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
                 Error = mean(error_array);
+                Score = 120 - Error/3;
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
@@ -695,6 +710,7 @@ switch exp_num
         subject_traj_10_array = zeros(1,10);
         velocity_10_array = zeros(1,10);
         current_10_array = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         target_pos_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -778,8 +794,10 @@ switch exp_num
                             while k <= 10
                                 c = clock;
                                 clock_count_down_current = c(4)*3600+c(5)*60+c(6);
-                                elapsed_time = clock_count_down_current - clock_count_down_start;
-                                elapsed_time_10_array(k) = elapsed_time;
+%                                 elapsed_time = clock_count_down_current - clock_count_down_start;
+%                                 elapsed_time_10_array(k) = elapsed_time;
+                                
+                                trial_num_10_array(k) = trial_index;
 
                                 % subject position
                                 dataR = int8(read(ur, 4, 'int8'));
@@ -794,7 +812,7 @@ switch exp_num
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
                             
-                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) speedFlag];
+                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) speedFlag];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             data_box = [];
@@ -821,8 +839,10 @@ switch exp_num
                         
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time = clockCurrent - clockStart;
+%                         elapsed_time_10_array(k) = elapsed_time;
+                        
+                        trial_num_10_array(k) = trial_index;
                         
                         % subject position
                         dataR = int8(read(ur, 4, 'int8'));
@@ -841,7 +861,7 @@ switch exp_num
                     end
                     
 
-                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5) round(speedFlag)];
+                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     data_box = [];
@@ -915,6 +935,7 @@ switch exp_num
         eeg_data = [];
         subject_traj_10_array = zeros(1,10);
         strength_10_array = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         currentPrev=0;
         current=0;
         
@@ -1001,9 +1022,13 @@ switch exp_num
                                 subject_position = typecast(dataR, 'single');
                                 subject_traj = -(subject_position)*90/6400;
                                 subject_traj_10_array(k) = subject_traj;
+                                
+                                trial_num_10_array(k) = trial_index;
+                                
+                                
                                 k = k+1;
                             end
-                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
+                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                         end
@@ -1072,11 +1097,14 @@ switch exp_num
                         subject_traj = -(subject_position)*90/6400;
                         subject_traj_10_array(k) = subject_traj;
                         strength_10_array(k) = strength;
+                        
+                        trial_num_10_array(k) = trial_index;
+                        
                         k = k+1;
                     end
                     
                     flush(ur)
-                    data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(zeros(1,10), -5)];
+                    data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                     
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -1129,7 +1157,7 @@ switch exp_num
         disp('Task 6: grip tracking')
         force_array = [];
         force_target_array = [];
-        Error_array = [];
+        error_array = [];
         elapsed_time = zeros(1,10);
         trial_num_10_array = zeros(1,10);
         force_target = [];
@@ -1141,6 +1169,7 @@ switch exp_num
         gripforce_error = {};
         gripforce_eeg = {};
         gripZeroPoint = {};
+        Error = 0;
         
         zero_point_array = 10.058.*ones(1,(total_trial_num));
         j = 1;
@@ -1157,9 +1186,6 @@ switch exp_num
         while(trial_num <= total_trial_num)
             disp('start of trial');
             disp(trial_num);
-             
-            Error_array = [];
-            Error = 0;
             
             pause_value = 0;
             
@@ -1242,15 +1268,11 @@ switch exp_num
                     force = read(u_force,10,'single');
                     
                     flush(u_force)
-                    
-%                     force = zeros(1,10);
-
-    %                 ErrorSample = sqrt((force_target-force).^2);
-    %                 Error_array = [Error_array ErrorSample];
-    %                 Error = mean(Error_array);
-                    
+    
+                    error_array = [error_array (mean(force_target - force)^2)];
+                    Error = mean(error_array);
+    
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
-                    
 
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -1289,6 +1311,7 @@ switch exp_num
         disp('Task 7: grip force maintain')
         force_array = [];
         force_target_array = [];
+        error_array = [];
         block_num = 1;
         gripForceMaintain = {};
         gripforce = {};
@@ -1296,6 +1319,7 @@ switch exp_num
         gripforce_eeg = {};
         strength_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
+        trial_num_10_array = zeros(1,10);
         Error = 0;
         
         strength_array = ones(1,(total_trial_num*total_block_num)-3);
@@ -1373,9 +1397,9 @@ switch exp_num
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
                             force = read(u_force,10,'single');
                             
-                            
+                            trial_num_10_array = trial_index*ones(1,10);
 
-                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
         %                     disp(data_box);
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
@@ -1401,7 +1425,8 @@ switch exp_num
                         
                         elapsed_time = clockCurrent - clockStart;
                         strength_10_array(k) = strength;
-                        elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time_10_array(k) = elapsed_time;
+                        trial_num_10_array(k) = trial_index;
                         
                         if mod(k,2) == 0
                             dataR_rda = int8(read(ur_rda, 264, 'int8'));
@@ -1414,7 +1439,10 @@ switch exp_num
                     end
                     flush(u_force)
                     
-                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                    error_array = [error_array (mean(10*strength_10_array - force)^2)];
+                    Error = mean(error_array);
+                    
+                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
 %                     disp(data_box);
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
