@@ -1170,6 +1170,7 @@ switch exp_num
         gripforce_eeg = {};
         gripZeroPoint = {};
         Error = 0;
+        Score = 0;
         
         zero_point_array = 10.058.*ones(1,(total_trial_num));
         j = 1;
@@ -1239,7 +1240,7 @@ switch exp_num
                     
                     force_target = -[37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02];
                     force = read(u_force,10,'single');
-                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     
 
                     newV = typecast(single(data_box), 'int8');
@@ -1269,10 +1270,11 @@ switch exp_num
                     
                     flush(u_force)
     
-                    error_array = [error_array (mean(force_target - force)^2)];
+                    error_array = [error_array abs((mean(force_target - (force*2 - 30))))];
                     Error = mean(error_array);
+                    Score = 100 - 2*Error;
     
-                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
 
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
@@ -1321,6 +1323,7 @@ switch exp_num
         elapsed_time_10_array = zeros(1,10);
         trial_num_10_array = zeros(1,10);
         Error = 0;
+        Score = 0;
         
         strength_array = ones(1,(total_trial_num*total_block_num)-3);
         j = 1;
@@ -1399,7 +1402,7 @@ switch exp_num
                             
                             trial_num_10_array = trial_index*ones(1,10);
 
-                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                            data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
         %                     disp(data_box);
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
@@ -1439,10 +1442,11 @@ switch exp_num
                     end
                     flush(u_force)
                     
-                    error_array = [error_array (mean(10*strength_10_array - force)^2)];
+                    error_array = [error_array abs((mean(10*strength_10_array - force)))];
                     Error = mean(error_array);
+                    Score = 100 - (Error^2)/3;
                     
-                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
 %                     disp(data_box);
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
