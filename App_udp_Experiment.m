@@ -84,6 +84,7 @@ switch exp_num
         currentPrev=0;
         current = 0;
         Error = 0;
+        Score = 0;
         
         trial_num = 1;
         
@@ -166,7 +167,7 @@ switch exp_num
                         k = k+1;
                     end
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                 else
@@ -223,7 +224,7 @@ switch exp_num
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
                 Error = mean(error_array);
-                Score = 120 - Error/3;
+                Score = 100 - Error/3;
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -302,6 +303,7 @@ switch exp_num
         currentPrev=0;
         current = 0;
         Error = 0;
+        Score = 0;
         trial_num = 1;
         
         zero_point_array = zeros(1,(total_trial_num));
@@ -384,7 +386,7 @@ switch exp_num
                     end
                     
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     disp('Wrote!')
@@ -430,7 +432,7 @@ switch exp_num
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
                 Error = mean(error_array);
-                Score = 120 - Error/3;
+                Score = 100 - Error/3;
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -511,6 +513,7 @@ switch exp_num
         currentPrev=0;
         current = 0;
         Error = 0;
+        Score = 0;
         target_traj = 0;
         subject_traj = 0;
         
@@ -598,7 +601,7 @@ switch exp_num
                     
                     
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
@@ -644,7 +647,7 @@ switch exp_num
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
                 Error = mean(error_array);
-                Score = 120 - Error/3;
+                Score = 100 - Error/3;
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
