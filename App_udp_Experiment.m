@@ -23,6 +23,10 @@ Error_array = [];
 hi5Torque = {};
 hi5Position = {};
 
+trigger_10_array = [1 zeros(1,9)];
+non_trigger_10_array = zeros(1,10);
+
+
 %% Run Python Code Here to activate Grip sensor
 % StartGripSensor()
 
@@ -69,6 +73,7 @@ switch exp_num
         hi5Error = {};
         hi5EEG = {};
         hi5ZeroPoint = {};
+        hi5Trigger = {};
         subject_traj_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
         target_traj_10_array = zeros(1,10);
@@ -80,6 +85,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        trigger_array = [];
         eeg_data = [];
         currentPrev=0;
         current = 0;
@@ -99,10 +105,16 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
+            
+            trial_trigger_flag = 1;
+            
             disp('start of trial')
             disp(trial_num);
             index = randi(length(zero_point_array));
@@ -160,17 +172,37 @@ switch exp_num
                         elapsed_time_10_array(k) = elapsed_time;
                         
                         trial_num_10_array(k) = trial_num;
+                        
+                        if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        end
 %                         [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
 %                         eeg_data = [eeg_data eeg_current];
                         dataW =  typecast(single([5 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
+                        
                         k = k+1;
                     end
+                    
+                    trigger_array = [trigger_array non_trigger_10_array];
+                    target_traj_array = [target_traj_array target_traj_10_array];
+                    subject_traj_array = [subject_traj_array subject_traj_10_array];
                     
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                 else
+                
+                if trial_trigger_flag
+                    dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                    fwrite(uw, dataW, 'int8');
+                    trial_trigger_flag = ~trial_trigger_flag;
+                    trigger_array = [trigger_array trigger_10_array];
+                else
+                    trigger_array = [trigger_array non_trigger_10_array];
+                end
                 
                 k = 1;
 %                 flush(ur_rda)
@@ -195,10 +227,6 @@ switch exp_num
                     target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
                     
-                    
-%                     [eeg_current, props,j, a, b, t] = get_eeg_modified(recorderip, con, stat, header_size, props);
-%                    
-%                     eeg_data = [eeg_data eeg_current];
 
                     if mod(k,2) == 0
                         dataR_rda = int8(read(ur_rda, 264, 'int8'));
@@ -241,6 +269,7 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
             hi5EEG.(trial_name) = eeg_data;
             hi5ZeroPoint.(trial_name) = zero_point;
+            hi5Trigger.(trial_name) = trigger_array;
 %             hi5Velocity.(trial_name) = velocity_array;
 %             hi5Current.(trial_name) = current_array;
 %             hi5Error.(trial_name) = Error_array;
@@ -250,6 +279,7 @@ switch exp_num
             current_array = [];
             Error_array = [];
             eeg_data = [];
+            trigger_array = [];
             
             disp('end of trial');
             trial_num = trial_num+1;
@@ -262,6 +292,7 @@ switch exp_num
 %         hi5Target_fullAssisted.hi5Error = hi5Error;
         hi5Target_fullAssisted.hi5EEG = hi5EEG;
         hi5Target_fullAssisted.hi5ZeroPoint = hi5ZeroPoint;
+        hi5Target_fullAssisted.hi5Trigger = hi5Trigger;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
         
         fclose(u2);
@@ -288,6 +319,7 @@ switch exp_num
         hi5Error = {};
         hi5EEG = {};
         hi5ZeroPoint = {};
+        hi5Trigger = {};
         subject_traj_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
         target_traj_10_array = zeros(1,10);
@@ -300,6 +332,7 @@ switch exp_num
         current_array = [];
         error_array = [];
         eeg_data = [];
+        trigger_array = [];
         currentPrev=0;
         current = 0;
         Error = 0;
@@ -317,12 +350,15 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
             data_box=[];
-            
+            trial_trigger_flag = 1;
             pause_value = 0;
             
             try
@@ -385,13 +421,24 @@ switch exp_num
                         k = k+1;
                     end
                     
+                    trigger_array = [trigger_array non_trigger_10_array];
+                    target_traj_array = [target_traj_array target_traj_10_array];
+                    subject_traj_array = [subject_traj_array subject_traj_10_array];
                     
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
-                    disp('Wrote!')
                 else
-                    tic
+                    
+                    if trial_trigger_flag
+                        dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        trial_trigger_flag = ~trial_trigger_flag;
+                        trigger_array = [trigger_array trigger_10_array];
+                    else
+                        trigger_array = [trigger_array non_trigger_10_array];
+                    end
+                    
                     k = 1;
                     while k <= 10
                         c = clock;
@@ -450,6 +497,8 @@ switch exp_num
             hi5TargetPos.(trial_name) = target_traj_array;
             hi5EEG.(trial_name) = eeg_data;
             hi5ZeroPoint.(trial_name) = zero_point;
+            hi5Trigger.(trial_name) = trigger_array;
+
 %             hi5Velocity.(trial_name) = velocity_array;
 %             hi5Current.(trial_name) = current_array;
 %             hi5Error.(trial_name) = Error_array;
@@ -459,6 +508,7 @@ switch exp_num
             current_array = [];
             Error_array = [];
             eeg_data = [];
+            trigger_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
             disp('end of trial');
@@ -473,6 +523,8 @@ switch exp_num
 %         hi5Target_semiAssisted.hi5Error = hi5Error;
         hi5Target_semiAssisted.hi5EEG = hi5EEG;
         hi5Target_semiAssisted.hi5ZeroPoint = hi5ZeroPoint;
+        hi5Target_semiAssisted.hi5Trigger = hi5Trigger;
+        
         save ('hi5Target_semiAssisted.mat','hi5Target_semiAssisted');
         fclose(uw);
         fclose(u2);
@@ -498,6 +550,7 @@ switch exp_num
         hi5Error = {};
         hi5EEG = {};
         hi5ZeroPoint = {};
+        hi5Trigger = {};
         subject_traj_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
         target_traj_10_array = zeros(1,10);
@@ -510,6 +563,7 @@ switch exp_num
         current_array = [];
         error_array = [];
         eeg_data = [];
+        trigger_array = [];
         currentPrev=0;
         current = 0;
         Error = 0;
@@ -530,11 +584,15 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
             
+            trial_trigger_flag = 1;
             pause_value = 0;
             
             try
@@ -561,8 +619,7 @@ switch exp_num
                 end
             end
             
-            flush(ur_rda);
-            flush(ur);
+            
             
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
@@ -573,6 +630,9 @@ switch exp_num
             zero_point_array(index) = [];
             
             trial_name = strcat('trial',num2str(trial_num));
+            
+            flush(ur_rda);
+            flush(ur);
             
             while (clockCurrent < clockStart + trial_length + countdown)
                 if clockCurrent < (clockStart + countdown)
@@ -594,21 +654,40 @@ switch exp_num
                         
                         trial_num_10_array(k) = trial_num;
                         
+                        if mod(k,2) == 0
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        end
+                        
                         dataW =  typecast(single([4 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
                     
-                    
+                    trigger_array = [trigger_array non_trigger_10_array];
+                    target_traj_array = [target_traj_array target_traj_10_array];
+                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+                
                     
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
                 else
-                
+                    
+                    if trial_trigger_flag
+                        dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        trial_trigger_flag = ~trial_trigger_flag;
+                        trigger_array = [trigger_array trigger_10_array];
+                    else
+                        trigger_array = [trigger_array non_trigger_10_array];
+                    end
+                    
                     k = 1;
                     while k <= 10
+                        tic
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
@@ -637,6 +716,7 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         
                         k = k+1;
+                        toc
                     end
                     flush(ur)
                     target_traj_array = [target_traj_array target_traj_10_array];
@@ -667,12 +747,14 @@ switch exp_num
 %             hi5Error.(trial_name) = error_array;
             hi5EEG.(trial_name) = eeg_data;
             hi5ZeroPoint.(trial_name) = zero_point;
+            hi5Trigger.(trial_name) = trigger_array;
             target_traj_array = [];
             subject_traj_array = [];
             velocity_array = [];
             current_array = [];
             error_array = [];
             eeg_data = [];
+            trigger_array = [];
             disp(trial_num);
             trial_num = trial_num+1;
         end
@@ -683,6 +765,8 @@ switch exp_num
 %         hi5Target_zeroAssisted.hi5Error = hi5Error;
         hi5Target_zeroAssisted.hi5EEG = hi5EEG;
         hi5Target_zeroAssisted.hi5ZeroPoint = hi5ZeroPoint;
+        hi5Target_zeroAssisted.hi5Trigger = hi5Trigger;
+        
         save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
         fclose(u2)
         fclose(uw)
@@ -708,6 +792,7 @@ switch exp_num
         hi5Velocity = {};
         hi5Current = {};
         hi5EEG = {};
+        hi5Trigger = {};
         target_pos_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
         subject_traj_10_array = zeros(1,10);
@@ -720,13 +805,18 @@ switch exp_num
         current_array = [];
         position_array = [];
         eeg_data = [];
+        trigger_array = [];
         
         Error = 0;
         posFlag = 0;
+        current = 0;
         trial_index = 1;
         
         block_num = 1;
         speeds=[0,1];
+        
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -749,7 +839,7 @@ switch exp_num
                 position_array = [position_array 40 20 -10 -20];
             end
             while(trial_num <= total_trial_num)
-                
+                trial_trigger_flag = 1;
                 pause_value = 0;
             
                 try
@@ -785,8 +875,7 @@ switch exp_num
                 executed = 0;
                 
                 while (clockCurrent < clockStart + trial_length)
-                    toc
-                    tic
+
                     if mod(trial_index, total_trial_num) == 1 && (block_flag == 1)
                         c = clock;
                         clock_count_down_start = c(4)*3600+c(5)*60+c(6);
@@ -809,8 +898,20 @@ switch exp_num
                                 subject_traj_10_array(k) = subject_traj;
 
                                 current_10_array(k) = 0;
+                                
+                                if mod(k,2) == 0
+                                disp('eeg')
+                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                                eeg_data_vector = typecast(dataR_rda, 'single');
+                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                                end
+                                
                                 k = k+1;
                             end
+                            
+                            trigger_array = [trigger_array non_trigger_10_array];
+                            target_pos_array = [target_pos_array zeros(1,10)];
+                            subject_traj_array = [subject_traj_array subject_traj_10_array];
                             
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
@@ -819,59 +920,81 @@ switch exp_num
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             data_box = [];
+                            
                         end
+%                         flush(ur)
                         block_flag = ~block_flag;
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
-                        
-                    end
-                    
-                    if posFlag == 0 && executed ==0
-                        index = randi(size(position_array));
-                        target_pos = position_array(index);
-                        position_array(index) = [];
-                        executed = 1;
-                    elseif posFlag == 1
-                        target_pos = 0;
-                    end
-                    k = 1;
-                    while k <= 10
-                        
-                        target_pos_10_array(k) = target_pos;
-                        
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-%                         elapsed_time = clockCurrent - clockStart;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        
-                        trial_num_10_array(k) = trial_index;
-                        
-                        % subject position
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
-                        subject_traj = -(subject_current_pos)*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+%                         eeg_data = [];
+%                         target_pos_array = [];
+%                         subject_traj_array = [];
+                    else
+%                         flush(ur)
+%                         flush(ur_rda)
+                        if posFlag == 0 && executed ==0
+                            index = randi(size(position_array));
+                            target_pos = position_array(index);
+                            position_array(index) = [];
+                            executed = 1;
+                        elseif posFlag == 1
+                            target_pos = 0;
                         end
                         
-                        current_10_array(k) = 0;
-                        k = k+1;
-                    end
-                    
+                        if trial_trigger_flag
+                            dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                            fwrite(uw, dataW, 'int8');
+                            trial_trigger_flag = ~trial_trigger_flag;
+                            trigger_array = [trigger_array trigger_10_array];
+                        else
+                            trigger_array = [trigger_array non_trigger_10_array];
+                        end
+                        
+                        k = 1;
 
-                    data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
-                    data_box = [];
-%                     velocity_array = [velocity_array velocity_10_array];
-%                     current_array = [current_array current_10_array];
-                    target_pos_array = [target_pos_array target_pos_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+                        while k <= 10
+                            tic
+                            target_pos_10_array(k) = target_pos;
+
+                            c = clock;
+                            clockCurrent = c(4)*3600+c(5)*60+c(6);
+    %                         elapsed_time = clockCurrent - clockStart;
+    %                         elapsed_time_10_array(k) = elapsed_time;
+
+                            trial_num_10_array(k) = trial_index;
+
+                            % subject position
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_current_pos = typecast(dataR, 'single');
+                            subject_traj = -(subject_current_pos)*90/6400;
+                            subject_traj_10_array(k) = subject_traj;
+
+                            if mod(k,2) == 0
+                                disp('eeg')
+                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                                eeg_data_vector = typecast(dataR_rda, 'single');
+                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                            end
+                            dataW =  typecast(single([4 0]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+
+                            current_10_array(k) = 0;
+                            k = k+1;
+                            toc
+                        end
+                        flush(ur)
+                        flush(ur_rda)
+
+                        data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
+                        newV = typecast(single(data_box), 'int8');
+                        fwrite(u2, newV, 'int8')
+                        data_box = [];
+    %                     velocity_array = [velocity_array velocity_10_array];
+    %                     current_array = [current_array current_10_array];
+                        target_pos_array = [target_pos_array target_pos_10_array];
+                        subject_traj_array = [subject_traj_array subject_traj_10_array];
+                    end
                 end
                 
                 dataW =  typecast(single([5 0]), 'int8');%set current to 0
@@ -889,14 +1012,25 @@ switch exp_num
 %                 hi5Velocity.(trial_name) = velocity_array;
 %                 hi5Current.(trial_name) = current_array;
                 hi5EEG.(trial_name) = eeg_data;
+                hi5Trigger.(trial_name) = trigger_array;
+
                 target_pos_array = [];
                 subject_traj_array = [];
                 velocity_array = [];
                 current_array = [];
                 eeg_data =[];
+                trigger_array = [];
                 disp(trial_num);
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
+                
+%                 if trial_index > total_trial_num*total_block_num
+%                     trial_num_10_array = trial_index*ones(1,10);
+%                     data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
+%                     newV = typecast(single(data_box), 'int8');
+%                     fwrite(u2, newV, 'int8')
+%                 end
+                
                 disp('end of trial');
             end
             block_num = block_num + 1;
@@ -907,6 +1041,8 @@ switch exp_num
 %         hi5Position_Track.hi5Velocity = hi5Velocity;
 %         hi5Position_Track.hi5Current = hi5Current;
         hi5Position_Track.hi5EEG = hi5EEG;
+        hi5Position_Track.hi5Trigger = hi5Trigger;
+        
         save ('hi5Position_Track.mat','hi5Position_Track');
         fclose(uw)
         fclose(u2)
@@ -931,16 +1067,20 @@ switch exp_num
         hi5Velocity = {};
         hi5Current = {};
         hi5EEG = {};
+        hi5ZeroPoint = {};
         target_strength_array = [];
         subject_traj_array = [];
         velocity_array = [];
         current_array = [];
         eeg_data = [];
+        error_array = [];
+        trigger_array = [];
         subject_traj_10_array = zeros(1,10);
         strength_10_array = zeros(1,10);
         trial_num_10_array = zeros(1,10);
         currentPrev=0;
         current=0;
+        Score = 0;
         
         Error = 0;
         block_num = 1;
@@ -953,6 +1093,9 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
         
@@ -963,7 +1106,7 @@ switch exp_num
             block_flag = 1;
             while(trial_num <= total_trial_num)
                 disp(['Trial index: ', num2str(trial_index)]);
-                
+                trial_trigger_flag = 1;
                 pause_value = 0;
             
                 try
@@ -1031,6 +1174,11 @@ switch exp_num
                                 
                                 k = k+1;
                             end
+                            
+                            trigger_array = [trigger_array non_trigger_10_array];
+                            target_strength_array = [target_strength_array zeros(1,10)];
+                            subject_traj_array = [subject_traj_array subject_traj_10_array];
+                
                             data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
@@ -1039,84 +1187,97 @@ switch exp_num
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
+                    else
+                        
+                        if trial_trigger_flag
+                            dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                            fwrite(uw, dataW, 'int8');
+                            trial_trigger_flag = ~trial_trigger_flag;
+                            trigger_array = [trigger_array trigger_10_array];
+                        else
+                            trigger_array = [trigger_array non_trigger_10_array];
+                        end
+                        
+                        k = 1;
+                        while k <= 10
+
+                            c = clock;
+                            clockCurrent = c(4)*3600+c(5)*60+c(6);
+        %                     clockStart = clockCurrent;
+                            elapsed_time = clockCurrent - clockStart;
+
+                            if (elapsed_time > 4)
+                                strength = 0;
+                            end
+
+                            switch strength
+                                case 0
+                                    current = 0;
+                                case 1
+                                    if (elapsed_time > 3.5)
+                                        current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                    elseif (elapsed_time > 0.5)
+                                        current = -2000;
+                                    elseif (elapsed_time > 0)
+                                        current=-2000*(2*(elapsed_time));
+                                    end
+                                case 2
+                                    if (elapsed_time > 3.5)
+                                        current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                    elseif (elapsed_time > 0.5)
+                                        current = -3000;
+                                    elseif (elapsed_time > 0)
+                                        current=-3000*(2*(elapsed_time));
+                                    end
+                                case 3
+                                    if (elapsed_time > 3.5)
+                                        current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                    elseif (elapsed_time > 0.5)
+                                        current = -4000;
+                                    elseif (elapsed_time > 0)
+                                        current=-4000*(2*(elapsed_time));
+                                    end
+                            end
+
+                            current = safetyCheck(current);
+                            dataW =  typecast(single([3 current]), 'int8');
+                            fwrite(uw, dataW, 'int8');
+
+                            if mod(k,2) == 0
+                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                                eeg_data_vector = typecast(dataR_rda, 'single');
+                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                            end
+
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_position = typecast(dataR, 'single');
+                            subject_traj = -(subject_position)*90/6400;
+                            subject_traj_10_array(k) = subject_traj;
+                            strength_10_array(k) = strength;
+
+                            trial_num_10_array(k) = trial_index;
+
+                            k = k+1;
+                        end
+
+                        error_array = [error_array abs(mean(subject_traj_10_array))];
+                        Error = mean(error_array);
+
+                        flush(ur)
+                        data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+
+                        newV = typecast(single(data_box), 'int8');
+                        fwrite(u2, newV, 'int8')
+    %                     velocity = Motor1.ActualVelocity;
+    %                     velocity_array = [velocity_array velocity];
+    %                     motor_current = current;
+    %                     current_array = [current_array motor_current];
+                        target_strength_array = [target_strength_array strength_10_array];
+                        subject_traj_array = [subject_traj_array subject_traj_10_array];
                     end
-                    
-                    k = 1;
-                    while k <= 10
-                        
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-    %                     clockStart = clockCurrent;
-                        elapsed_time = clockCurrent - clockStart;
-
-                        if (elapsed_time > 4)
-                            strength = 0;
-                        end
-                    
-                        switch strength
-                            case 0
-                                current = 0;
-                            case 1
-                                if (elapsed_time > 3.5)
-                                    current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                elseif (elapsed_time > 0.5)
-                                    current = -2000;
-                                elseif (elapsed_time > 0)
-                                    current=-2000*(2*(elapsed_time));
-                                end
-                            case 2
-                                if (elapsed_time > 3.5)
-                                    current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                elseif (elapsed_time > 0.5)
-                                    current = -3000;
-                                elseif (elapsed_time > 0)
-                                    current=-3000*(2*(elapsed_time));
-                                end
-                            case 3
-                                if (elapsed_time > 3.5)
-                                    current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                elseif (elapsed_time > 0.5)
-                                    current = -4000;
-                                elseif (elapsed_time > 0)
-                                    current=-4000*(2*(elapsed_time));
-                                end
-                        end
-
-                        current = safetyCheck(current);
-                        dataW =  typecast(single([3 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                        end
-                        
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_position = typecast(dataR, 'single');
-                        subject_traj = -(subject_position)*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
-                        strength_10_array(k) = strength;
-                        
-                        trial_num_10_array(k) = trial_index;
-                        
-                        k = k+1;
-                    end
-                    
-                    flush(ur)
-                    data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
-                    
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
-%                     velocity = Motor1.ActualVelocity;
-%                     velocity_array = [velocity_array velocity];
-%                     motor_current = current;
-%                     current_array = [current_array motor_current];
-                    target_strength_array = [target_strength_array strength_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
                 end
                 trial_name = strcat('trial',num2str(trial_num));
                 hi5WristPos.(trial_name) = subject_traj_array;
@@ -1124,11 +1285,13 @@ switch exp_num
 %                 hi5Velocity.(trial_name) = velocity_array;
 %                 hi5Current.(trial_name) = current_array;
                 hi5EEG.(trial_name) = eeg_data;
+                hi5Trigger.(trial_name) = trigger_array;
                 strength_10_array = [];
                 subject_traj_10_array = [];
                 target_strength_array = [];
                 subject_traj_array = [];
                 eeg_data = [];
+                trigger_array = [];
 %                 velocity_array = [];
 %                 current_array = [];
                 trial_num = trial_num + 1;
@@ -1145,6 +1308,8 @@ switch exp_num
 %         hi5Torque_Stablization.hi5Velocity = hi5Velocity;
 %         hi5Torque_Stablization.hi5Current = hi5Current;
         hi5Torque_Stablization.hi5EEG = hi5EEG;
+        hi5Torque_Stablization.hi5Trigger = hi5Trigger;
+        
         save ('hi5Torque_Stablization.mat','hi5Torque_Stablization');
         fclose(uw)
         fclose(u2)
@@ -1172,6 +1337,8 @@ switch exp_num
         gripforce_error = {};
         gripforce_eeg = {};
         gripZeroPoint = {};
+        gripTrigger = {};
+        trigger_array = [];
         Error = 0;
         Score = 0;
         
@@ -1186,10 +1353,14 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
             disp('start of trial');
             disp(trial_num);
+            
+            trial_trigger_flag = 1;
             
             pause_value = 0;
             
@@ -1243,6 +1414,11 @@ switch exp_num
                     
                     force_target = -[37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02];
                     force = read(u_force,10,'single');
+                    
+                    trigger_array = [trigger_array non_trigger_10_array];
+                    force_array = [force_array force];
+                    force_target_array = [force_target_array force_target];
+                    
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     
 
@@ -1252,6 +1428,16 @@ switch exp_num
                     
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    
+                    if trial_trigger_flag
+                        dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        trial_trigger_flag = ~trial_trigger_flag;
+                        trigger_array = [trigger_array trigger_10_array];
+                    else
+                        trigger_array = [trigger_array non_trigger_10_array];
+                    end
+                    
                     k = 1;
                     
                     while k <= 10
@@ -1293,10 +1479,12 @@ switch exp_num
             gripforce_error.(force_name) = Error_array;
             gripforce_eeg.(force_name) = eeg_data;
             gripZeroPoint.(force_name) = zero_point;
+            gripTrigger.(force_name) = trigger_array;
             force_target_array = [];
             force_array = [];
             Error_array = [];
             eeg_data = [];
+            trigger_array = [];
             trial_num = trial_num+1;
             disp('end of trial');
         end
@@ -1304,6 +1492,7 @@ switch exp_num
         gripTrack.gripForceTarget = gripforce_target;
         gripTrack.EEG = gripforce_eeg;
         gripTrack.gripZeroPoint = gripZeroPoint;
+        gripTrack.gripTrigger = gripTrigger;
 %         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
         fclose(u2)
@@ -1317,11 +1506,13 @@ switch exp_num
         force_array = [];
         force_target_array = [];
         error_array = [];
+        trigger_array = [];
         block_num = 1;
         gripForceMaintain = {};
         gripforce = {};
         gripforce_target = {};
         gripforce_eeg = {};
+        gripforce_trigger = {};
         strength_10_array = zeros(1,10);
         elapsed_time_10_array = zeros(1,10);
         trial_num_10_array = zeros(1,10);
@@ -1338,12 +1529,15 @@ switch exp_num
         flush(u_force);
         flush(ur_rda)
         
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        
         trial_index = 1;
         while(block_num <= total_block_num)
             trial_num = 1;
             block_flag = 1;
             while(trial_num <= total_trial_num)
-                
+                trial_trigger_flag = 1;
                 pause_value = 0;
             
                 try
@@ -1404,6 +1598,10 @@ switch exp_num
                             force = read(u_force,10,'single');
                             
                             trial_num_10_array = trial_index*ones(1,10);
+                            
+                            trigger_array = [trigger_array non_trigger_10_array];
+                            force_array = [force_array force];
+                            force_target_array = [force_target_array zeros(1,10)];
 
                             data_box = [roundn(zeros(1,10),-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
         %                     disp(data_box);
@@ -1415,55 +1613,67 @@ switch exp_num
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
                         eeg_data = [];
-                    end
-                    
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    if (clockCurrent > clockStart + 3)
-                        strength = 0;
-                    end
-                    
-                    flush(u_force)
-                    force = read(u_force,10,'single');
-                    
-                    k = 1;
-                    while k <= 10
+                    else
                         
-                        elapsed_time = clockCurrent - clockStart;
-                        strength_10_array(k) = strength;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        trial_num_10_array(k) = trial_index;
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        if trial_trigger_flag
+                            dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                            fwrite(uw, dataW, 'int8');
+                            trial_trigger_flag = ~trial_trigger_flag;
+                            trigger_array = [trigger_array trigger_10_array];
+                        else
+                            trigger_array = [trigger_array non_trigger_10_array];
                         end
                         
-                        k = k+1;
-                        
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        if (clockCurrent > clockStart + 3)
+                            strength = 0;
+                        end
+
+                        flush(u_force)
+                        force = read(u_force,10,'single');
+
+                        k = 1;
+                        while k <= 10
+
+                            elapsed_time = clockCurrent - clockStart;
+                            strength_10_array(k) = strength;
+    %                         elapsed_time_10_array(k) = elapsed_time;
+                            trial_num_10_array(k) = trial_index;
+
+                            if mod(k,2) == 0
+                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                                eeg_data_vector = typecast(dataR_rda, 'single');
+                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                            end
+
+                            k = k+1;
+
+                        end
+                        flush(u_force)
+
+                        error_array = [error_array abs((mean(10*strength_10_array - force)))];
+                        Error = mean(error_array);
+                        Score = 100 - (Error^2)/3;
+
+                        data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
+    %                     disp(data_box);
+                        newV = typecast(single(data_box), 'int8');
+                        fwrite(u2, newV, 'int8')
+                        force_array = [force_array force];
+                        force_target_array = [force_target_array strength_10_array];
+    %                     pause(0.002)
                     end
-                    flush(u_force)
-                    
-                    error_array = [error_array abs((mean(10*strength_10_array - force)))];
-                    Error = mean(error_array);
-                    Score = 100 - (Error^2)/3;
-                    
-                    data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
-%                     disp(data_box);
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
-                    force_array = [force_array force];
-                    force_target_array = [force_target_array strength_10_array];
-%                     pause(0.002)
                 end
                 force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;
                 gripforce_target.(force_name) = force_target_array;
                 gripforce_eeg.(force_name) = eeg_data;
+                gripforce_trigger.(force_name) = trigger_array;
                 force_target_array = [];
                 force_array = [];
                 eeg_data = [];
+                trigger_array = [];
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
                 disp('end of trial');
@@ -1474,6 +1684,7 @@ switch exp_num
         gripForceMaintain.gripforce = gripforce;
         gripForceMaintain.gripforceTarget = gripforce_target;
         gripForceMaintain.EEG = gripforce_eeg;
+        gripForceMaintain.gripforce_trigger = gripforce_trigger;
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
         

@@ -39,6 +39,7 @@ clockStart = c(4)*3600+c(5)*60+c(6);
 clockStartPrev = clockStart - 4.5;
 startPositionE = Motor1.ActualPosition;
 
+Motor1.SetWithDigital(1, 1);
 Motor1.SetWithAnalog(1,3500); % untrigger, analog output pin, analog mV value, max 4000
 %move motor
 while (trialNum<trials)

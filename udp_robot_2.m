@@ -23,6 +23,10 @@ Motor1.DisableNode;
 Motor1.SetOperationMode( OperationModes.CurrentMode );
 Motor1.EnableNode;
 Motor1.ClearErrorState;
+
+Motor1.SetWithDigital(1, 0);
+Motor1.SetWithDigital(2, 0);
+
 c = clock();
 clockStart = (c(4)*3600+c(5)*60+c(6))/1000;
 current = 0;
@@ -69,6 +73,12 @@ while(1)
 %         Motor1.MotionWithCurrent(0);
     elseif (mode == 5)
         Motor1.MotionWithCurrent(0);
+    elseif (mode == 6)% trigger for trial
+        Motor1.SetWithDigital(1, 1);
+        Motor1.SetWithDigital(1, 0);
+    elseif (mode == 7)% trigger for task
+        Motor1.SetWithDigital(2, 1);
+        Motor1.SetWithDigital(2, 0);
     else
     end
     %write data
