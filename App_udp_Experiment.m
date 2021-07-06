@@ -46,10 +46,10 @@ total_trial_num = str2double(cell2mat(strcat(app_data_string(3),app_data_string(
 trial_length = str2double(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
 total_block_num = str2double(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
 
-countdown = 2;
+countdown = 3;
 
 switch exp_num
-%     
+%
 %------------------------Full-assisted target tracking---------------------
     case 1 %hi5 full-assisted target tracking
         
@@ -211,9 +211,11 @@ switch exp_num
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     % subject position
-%                     subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+%                     subject_current_pos = Motor1.ActualPosition;   
+                    tic
                     dataR = int8(read(ur, 4, 'int8'));
                     subject_current_pos = typecast(dataR, 'single');
+                    toc
                     
                     subject_traj = -(subject_current_pos)*90/6400;
                     subject_traj_10_array(k) = subject_traj;
@@ -1319,6 +1321,7 @@ switch exp_num
     case 6 %grip tracking
         fclose(u2)
         fopen(u2);
+        fopen(uw);
         flush(u_force);
         flush(ur_rda);
         trial_length = 10;
@@ -1496,11 +1499,13 @@ switch exp_num
 %         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
         fclose(u2)
+        fclose(uw);
         
 %------------------------Grip force maintain-------------------------------
     case 7 %grip force maintain
         fclose(u2)
         fopen(u2);
+        fopen(uw);
         
         disp('Task 7: grip force maintain')
         force_array = [];
@@ -1687,6 +1692,7 @@ switch exp_num
         gripForceMaintain.gripforce_trigger = gripforce_trigger;
         save ('gripForceMaintain.mat','gripForceMaintain');
         fclose(u2)
+        fclose(uw)
         
 %------------------------Position training-------------------------------
 

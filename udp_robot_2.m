@@ -63,7 +63,7 @@ while(1)
     elseif ( mode  == 2 ) % full assistance (high stiffness)
         init = 0;
         KW = -4;
-        DW = 0;
+        DW = 1;
         Motor1.MotionWithCurrent(current);
     elseif ( mode == 3 )
         init = 1;
