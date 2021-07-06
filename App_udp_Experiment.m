@@ -226,7 +226,7 @@ switch exp_num
                     
                     trial_num_10_array(k) = trial_num;
                     
-                    target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
+                    target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
                     target_traj_10_array(k) = target_traj;
                     
 
@@ -418,7 +418,7 @@ switch exp_num
                         
                         trial_num_10_array(k) = trial_num;
                         
-                        dataW =  typecast(single([5 current]), 'int8');
+                        dataW =  typecast(single([8 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
@@ -459,7 +459,7 @@ switch exp_num
                         
                         trial_num_10_array(k) = trial_num;
                         
-                        target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
+                        target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
                         target_traj_10_array(k) = target_traj;
                         
                         if mod(k,2) == 0
@@ -622,7 +622,6 @@ switch exp_num
             end
             
             
-            
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
@@ -671,6 +670,7 @@ switch exp_num
                     target_traj_array = [target_traj_array target_traj_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 
+%                     data_box = [roundn(zeros(1,0),-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                     
                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
@@ -689,7 +689,6 @@ switch exp_num
                     
                     k = 1;
                     while k <= 10
-                        tic
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
@@ -705,7 +704,7 @@ switch exp_num
                         
                         trial_num_10_array(k) = trial_num;
                         
-                        target_traj = 2*18.51*(sin((elapsed_time - 5 + zero_point)*pi/1.547)*sin((elapsed_time - 5 + zero_point)*pi/2.875));
+                        target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
                         target_traj_10_array(k) = target_traj;
                         
                         if mod(k,2) == 0
@@ -718,7 +717,6 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         
                         k = k+1;
-                        toc
                     end
                     flush(ur)
                     target_traj_array = [target_traj_array target_traj_10_array];
@@ -731,7 +729,9 @@ switch exp_num
                 Error = mean(error_array);
                 Score = 100 - Error/3;
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
+%                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                
+                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)]
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
@@ -829,7 +829,8 @@ switch exp_num
             block_flag = 1;
             
             speed_index = randi(length(speeds));
-            speedFlag = speeds(speed_index);
+            speedFlag = 0;
+%             speeds(speed_index);
             speeds(speed_index) = [];
             
             data_box = [zeros(1,10) zeros(1,10) roundn(Error,-5) zeros(1,10) speedFlag];
@@ -1358,6 +1359,8 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
+        fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
             disp('start of trial');
@@ -1434,6 +1437,8 @@ switch exp_num
                     
                     if trial_trigger_flag
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
                         fwrite(uw, dataW, 'int8');
                         trial_trigger_flag = ~trial_trigger_flag;
                         trigger_array = [trigger_array trigger_10_array];
@@ -1536,6 +1541,8 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
+        fwrite(uw, dataW, 'int8');
         
         trial_index = 1;
         while(block_num <= total_block_num)
@@ -1622,6 +1629,8 @@ switch exp_num
                         
                         if trial_trigger_flag
                             dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                            fwrite(uw, dataW, 'int8');
+                            dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
                             trial_trigger_flag = ~trial_trigger_flag;
                             trigger_array = [trigger_array trigger_10_array];

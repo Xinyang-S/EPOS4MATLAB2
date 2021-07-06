@@ -60,10 +60,35 @@ while(1)
         KW = -2;
         DW= 0;
         Motor1.MotionWithCurrent(current);
+    elseif ( mode  == 8 ) % medium stiffness
+        init = 0;
+        KW = -8;
+        DW= 0;
+        if abs(encoder)>300
+        current = current/abs(encoder)*200;
+        elseif abs(encoder)<300 && abs(encoder)>150
+            current = current/abs(encoder)*100;
+        elseif abs(encoder)<=150
+            current = current/abs(encoder)*20;
+        end
+%         if abs(encoder) <1000
+%             if current > 3000
+%                 current = 3000;
+%             elseif current < -3000
+%                 current = -3000;
+%             end
+%         else
+%             if current > 1000
+%                 current = 1000;
+%             elseif current < -1000
+%                 current = -1000;
+%             end
+%         end
+        Motor1.MotionWithCurrent(current);
     elseif ( mode  == 2 ) % full assistance (high stiffness)
         init = 0;
         KW = -4;
-        DW = 1;
+        DW = 0;
         Motor1.MotionWithCurrent(current);
     elseif ( mode == 3 )
         init = 1;
