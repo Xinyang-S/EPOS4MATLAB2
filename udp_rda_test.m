@@ -22,7 +22,7 @@ while 1
     tic
     dataW =  typecast(single(EEGData_vector), 'int8');
     fwrite(uw_rda, dataW, 'int8');
-    pause(0.018)
+    pause(0.015)
 end
 
 fclose(uw_rda);

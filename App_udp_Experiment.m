@@ -18,7 +18,7 @@ uw_rda = udp('LocalHost', port_rda+1,'timeout',100);
 ur_rda = udpport('LocalPort', port_rda+2);
 
 data_string = [];
-Error_array = [];
+Score_array = [];
 
 hi5Torque = {};
 hi5Position = {};
@@ -180,7 +180,7 @@ switch exp_num
                         end
 %                         [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
 %                         eeg_data = [eeg_data eeg_current];
-                        dataW =  typecast(single([5 current]), 'int8');
+                        dataW =  typecast(single([8 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         
                         k = k+1;
@@ -253,8 +253,9 @@ switch exp_num
                 end
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
-                Error = mean(error_array);
-                Score = 100 - Error/3;
+                
+                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
+                
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -265,6 +266,7 @@ switch exp_num
 %             Motor1.MotionWithCurrent(0);
             dataW =  typecast(single([5 0]), 'int8');
             fwrite(uw, dataW, 'int8');
+            disp('zero')
             
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
@@ -279,7 +281,6 @@ switch exp_num
             subject_traj_array = [];
             velocity_array = [];
             current_array = [];
-            Error_array = [];
             eeg_data = [];
             trigger_array = [];
             
@@ -296,6 +297,13 @@ switch exp_num
         hi5Target_fullAssisted.hi5ZeroPoint = hi5ZeroPoint;
         hi5Target_fullAssisted.hi5Trigger = hi5Trigger;
         save ('hi5Target_fullAssisted.mat','hi5Target_fullAssisted');
+        
+        Error = mean(error_array);
+        Score = 100 - Error/3;
+        
+        error_array = [];
+        
+        Score_array  = [Score_array Score];
         
         fclose(u2);
         fclose(uw);
@@ -480,8 +488,9 @@ switch exp_num
                 end
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
-                Error = mean(error_array);
-                Score = 100 - Error/3;
+                
+                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
+                
                 
                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -508,7 +517,6 @@ switch exp_num
             subject_traj_array = [];
             velocity_array = [];
             current_array = [];
-            Error_array = [];
             eeg_data = [];
             trigger_array = [];
             disp(trial_num);
@@ -526,8 +534,13 @@ switch exp_num
         hi5Target_semiAssisted.hi5EEG = hi5EEG;
         hi5Target_semiAssisted.hi5ZeroPoint = hi5ZeroPoint;
         hi5Target_semiAssisted.hi5Trigger = hi5Trigger;
-        
         save ('hi5Target_semiAssisted.mat','hi5Target_semiAssisted');
+        
+        Error = mean(error_array);
+        Score = 100 - Error/3;
+        error_array = [];
+        Score_array = [Score_array Score];
+        
         fclose(uw);
         fclose(u2);
         
@@ -636,6 +649,7 @@ switch exp_num
             flush(ur);
             
             while (clockCurrent < clockStart + trial_length + countdown)
+                tic
                 if clockCurrent < (clockStart + countdown)
                     k = 1;
                     target_traj_10_array = zeros(1,10);
@@ -661,7 +675,7 @@ switch exp_num
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
                         
-                        dataW =  typecast(single([4 current]), 'int8');
+                        dataW =  typecast(single([8 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
                     end
@@ -726,8 +740,8 @@ switch exp_num
                 flush(ur)
                 
                 error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
-                Error = mean(error_array);
-                Score = 100 - Error/3;
+                
+                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
                 
 %                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 
@@ -737,7 +751,7 @@ switch exp_num
 
 %                 velocity_array = [velocity_array velocity_10_array];
 %                 current_array = [current_array current_10_array];
-                
+                toc
             end
             dataW =  typecast(single([5 0]), 'int8');
             fwrite(uw, dataW, 'int8');
@@ -754,7 +768,6 @@ switch exp_num
             subject_traj_array = [];
             velocity_array = [];
             current_array = [];
-            error_array = [];
             eeg_data = [];
             trigger_array = [];
             disp(trial_num);
@@ -770,6 +783,12 @@ switch exp_num
         hi5Target_zeroAssisted.hi5Trigger = hi5Trigger;
         
         save ('hi5Target_zeroAssisted.mat','hi5Target_zeroAssisted');
+        
+        Error = mean(error_array);
+        Score = 100 - Error/3;
+        error_array = [];
+        Score_array = [Score_array Score];
+        
         fclose(u2)
         fclose(uw)
         
@@ -829,8 +848,7 @@ switch exp_num
             block_flag = 1;
             
             speed_index = randi(length(speeds));
-            speedFlag = 0;
-%             speeds(speed_index);
+            speedFlag =speeds(speed_index);
             speeds(speed_index) = [];
             
             data_box = [zeros(1,10) zeros(1,10) roundn(Error,-5) zeros(1,10) speedFlag];
@@ -1468,8 +1486,8 @@ switch exp_num
                     flush(u_force)
     
                     error_array = [error_array abs((mean(force_target - (force*2 - 30))))];
-                    Error = mean(error_array);
-                    Score = 100 - 2*Error;
+                    
+                    Score = 100 - 2*abs((mean(force_target - (force*2 - 30))));
     
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
 
@@ -1484,13 +1502,13 @@ switch exp_num
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
-            gripforce_error.(force_name) = Error_array;
+            gripforce_error.(force_name) = error_array;
             gripforce_eeg.(force_name) = eeg_data;
             gripZeroPoint.(force_name) = zero_point;
             gripTrigger.(force_name) = trigger_array;
             force_target_array = [];
             force_array = [];
-            Error_array = [];
+            error_array = [];
             eeg_data = [];
             trigger_array = [];
             trial_num = trial_num+1;
@@ -1503,6 +1521,14 @@ switch exp_num
         gripTrack.gripTrigger = gripTrigger;
 %         gripTrack.gripforce_error = gripforce_error;
         save ('gripTrack.mat','gripTrack');
+        
+        Error = mean(error_array);
+        Score = 100 - Error*2;
+        error_array = [];
+        Score_array = [Score_array Score];
+        disp('Your Final Score:');
+        Master_score = mean(Score_array)
+        
         fclose(u2)
         fclose(uw);
         
@@ -1667,8 +1693,8 @@ switch exp_num
                         flush(u_force)
 
                         error_array = [error_array abs((mean(10*strength_10_array - force)))];
-                        Error = mean(error_array);
-                        Score = 100 - (Error^2)/3;
+                        
+                        Score = 100 - (abs((mean(10*strength_10_array - force)))^2)/3;
 
                         data_box = [roundn(strength_10_array,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
     %                     disp(data_box);
@@ -1700,6 +1726,14 @@ switch exp_num
         gripForceMaintain.EEG = gripforce_eeg;
         gripForceMaintain.gripforce_trigger = gripforce_trigger;
         save ('gripForceMaintain.mat','gripForceMaintain');
+        
+        Error = mean(error_array);
+        Score = 100 - (Error^2)/3;
+        error_array = [];
+        Score_array = [Score_array Score];
+        disp('Your Final Score:');
+        Master_score = mean(Score_array)
+        
         fclose(u2)
         fclose(uw)
         
@@ -1936,6 +1970,8 @@ switch exp_num
         dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
         expName=strcat('experimentData_',Username,'_',dt,'.mat');
         save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
+%         save(expName,'hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
+        
         disp(strcat('Data was saved succesfully! The file name is'," ",expName));
         
 end

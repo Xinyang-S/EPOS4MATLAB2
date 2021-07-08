@@ -11,7 +11,7 @@ end
 clear ur;
 %fclose(uw);
 port = 5566;
-ur = udpport('LocalPort', port+1,'timeout',0.005);
+ur = udpport('LocalPort', port+1,'timeout',0.001);
 uw = udp('LocalHost', port+2,'timeout',100);
 fopen(uw);
 trajectory_array = [];
@@ -36,11 +36,14 @@ encoderStart = Motor1.ActualPosition;
 KW = 0;
 DW= 0;
 trajectory = 0;
-mode = 0;
+mode = 4;
 init = 0;
+current_pre = 0;
 filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0;
 j = 1;
 while(1)
+    toc
+    tic
     if mod(j,10) == 0
         flush(ur)
     end
@@ -52,6 +55,16 @@ while(1)
     posErrorPrev = posError;
     current = KW*posError + DW*posErrorDiff;
     current = safetyCheck(current);
+%     current_pre = current;
+    Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
+%     Motor1.SetWithAnalog(2,encTomV(encoderStart, trajectory*4000/120+4000/2));
+%     Motor1.SetWithAnalog(2,trajectory*4000/120+4000/2);
+%     encTomV(0,trajectory*4000/120+4000/2)
+% encTomV(encoderStart, Motor1.ActualPosition)
+% encTomV(encoderStart, trajectory*4000/120+4000/2)
+
+%     encTomV(encoderStart, Motor1.ActualPosition)
+    
     if ( mode == 0 )%zero assistance
         init = 1;
         encoderStart = Motor1.ActualPosition;
@@ -59,31 +72,6 @@ while(1)
         init = 0;
         KW = -2;
         DW= 0;
-        Motor1.MotionWithCurrent(current);
-    elseif ( mode  == 8 ) % medium stiffness
-        init = 0;
-        KW = -8;
-        DW= 0;
-        if abs(encoder)>300
-        current = current/abs(encoder)*200;
-        elseif abs(encoder)<300 && abs(encoder)>150
-            current = current/abs(encoder)*100;
-        elseif abs(encoder)<=150
-            current = current/abs(encoder)*20;
-        end
-%         if abs(encoder) <1000
-%             if current > 3000
-%                 current = 3000;
-%             elseif current < -3000
-%                 current = -3000;
-%             end
-%         else
-%             if current > 1000
-%                 current = 1000;
-%             elseif current < -1000
-%                 current = -1000;
-%             end
-%         end
         Motor1.MotionWithCurrent(current);
     elseif ( mode  == 2 ) % full assistance (high stiffness)
         init = 0;
@@ -104,6 +92,28 @@ while(1)
     elseif (mode == 7)% trigger for task
         Motor1.SetWithDigital(2, 1);
         Motor1.SetWithDigital(2, 0);
+    elseif ( mode  == 8 ) % medium stiffness
+        init = 0;
+% %         KW=-4;
+%         KW = -(abs(encoder/1000)+1)*1.3;
+%         DW= 0;
+%         if (current_pre - current) > 300
+%             current = current_pre - 100
+%         elseif (current_pre - current) < -300
+%             current = current_pre + 100
+%         end
+% 
+%         current_pre = current;
+
+
+        KW_zero=-30/abs(encoder/1000);
+        if KW_zero < -30
+            KW_zero = -30;
+        end
+        encoder = Motor1.ActualPosition - encoderStart;
+        current_zero = KW_zero*0.05*encoder;
+        current_zero = safetyCheck(current_zero);
+        Motor1.MotionWithCurrent(current_zero);
     else
     end
     %write data
@@ -117,6 +127,7 @@ while(1)
         c2= c(4)*3600+c(5)*60+c(6);
         dataR = int8(read(ur,8, 'int8'));
         dataR1 = typecast(dataR, 'single');
+        Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
         mode = dataR1(1);
 %         trajectory = dataR1(2)*6400/90;
         trajectory = dataR1(2);

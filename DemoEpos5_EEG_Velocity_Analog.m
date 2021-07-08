@@ -24,7 +24,7 @@ maxPosShiftP = 1000;
 maxPosShiftN = -1000;
 velocityP = 300;
 velocityN = -300;
-trials=5; % change to 5 if testing, or 50 for eeg experiment
+trials=20; % change to 5 if testing, or 50 for eeg experiment
 trialNum=0;
 
 %initialize
@@ -55,13 +55,15 @@ while (trialNum<trials)
         clockNew = c(4)*3600+c(5)*60+c(6);
         clockPrev = clockNew; 
         Motor1.SetWithAnalog(1,0); % trigger, analog output pin, analog mV value, max 4000
-        Motor1.SetWithAnalog(1,3500); % untrigger, analog output pin, analog mV value, max 4000
+        Motor1.SetWithAnalog(1,35); % untrigger, analog output pin, analog mV value, max 4000
         
         while(clockNew < (clockPrev + wait) && Motor1.ActualPosition < startPosition + maxPosShiftP && Motor1.ActualCurrent < maxCurrent)    
+            Motor1.ActualPosition
             Motor1.SetWithAnalog(2,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
+            Motor1.SetWithAnalog(1,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
             c = clock;
             clockNew = c(4)*3600+c(5)*60+c(6);
-            Motor1.MotionInVelocity(velocityP);
+            %Motor1.MotionInVelocity(velocityP);
         end
         Motor1.MotionInVelocity(0);
 
@@ -69,10 +71,13 @@ while (trialNum<trials)
         clockNew = c(4)*3600+c(5)*60+c(6);
         clockPrev = clockNew; 
         while(clockNew < (clockPrev + wait) && Motor1.ActualPosition > startPosition + maxPosShiftN && Motor1.ActualCurrent < maxCurrent)    
+            Motor1.ActualPosition
             Motor1.SetWithAnalog(2,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
+            Motor1.SetWithAnalog(1,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
+
             c = clock;
             clockNew = c(4)*3600+c(5)*60+c(6);
-            Motor1.MotionInVelocity(velocityN);
+%             Motor1.MotionInVelocity(velocityN);
         end
         Motor1.DisableNode;
         disp(trialNum)
