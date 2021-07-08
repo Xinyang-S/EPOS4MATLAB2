@@ -5,7 +5,7 @@ try
     disp('estop')
 catch
 end
-%%
+%%ti
 % read udpport (no flush)
 % write udp
 clear ur;
@@ -56,7 +56,7 @@ while(1)
     current = KW*posError + DW*posErrorDiff;
     current = safetyCheck(current);
 %     current_pre = current;
-    Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
+%     Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
 %     Motor1.SetWithAnalog(2,encTomV(encoderStart, trajectory*4000/120+4000/2));
 %     Motor1.SetWithAnalog(2,trajectory*4000/120+4000/2);
 %     encTomV(0,trajectory*4000/120+4000/2)

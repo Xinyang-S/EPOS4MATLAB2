@@ -74,12 +74,6 @@ switch exp_num
         hi5EEG = {};
         hi5ZeroPoint = {};
         hi5Trigger = {};
-        subject_traj_10_array = zeros(1,10);
-        elapsed_time_10_array = zeros(1,10);
-        target_traj_10_array = zeros(1,10);
-        velocity_10_array = zeros(1,10);
-        current_10_array = zeros(1,10);
-        trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -152,84 +146,59 @@ switch exp_num
             c = clock;
             clockStart = c(4)*3600+c(5)*60+c(6);
             clockCurrent = clockStart;
-            
+            k = 1;
             while (clockCurrent < clockStart + trial_length + countdown)
                 if clockCurrent < (clockStart+countdown)
-                    k = 1;
-                    target_traj_10_array = zeros(1,10);
-                    while k <= 10
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
-
-                        subject_traj = -(subject_current_pos).*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
-
-                        % target position
-                        elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
-                        
-                        trial_num_10_array(k) = trial_num;
-                        
-                        if mod(k,2) == 0
-                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                        eeg_data_vector = typecast(dataR_rda, 'single');
-                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                        end
-%                         [eeg_current, props] = get_eeg(recorderip, con, stat, header_size, props);
-%                         eeg_data = [eeg_data eeg_current];
-                        dataW =  typecast(single([8 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                        
-                        k = k+1;
-                    end
-                    
-                    trigger_array = [trigger_array non_trigger_10_array];
-                    target_traj_array = [target_traj_array target_traj_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
-                    
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
-                else
-                
-                if trial_trigger_flag
-                    dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
-                    fwrite(uw, dataW, 'int8');
-                    trial_trigger_flag = ~trial_trigger_flag;
-                    trigger_array = [trigger_array trigger_10_array];
-                else
-                    trigger_array = [trigger_array non_trigger_10_array];
-                end
-                
-                k = 1;
-%                 flush(ur_rda)
-                while k <= 10
                     
                     c = clock;
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
-                    % subject position
-%                     subject_current_pos = Motor1.ActualPosition;   
-                    tic
+
                     dataR = int8(read(ur, 4, 'int8'));
                     subject_current_pos = typecast(dataR, 'single');
-                    toc
-                    
-                    subject_traj = -(subject_current_pos)*90/6400;
-                    subject_traj_10_array(k) = subject_traj;
-                    
+
+                    subject_traj = -(subject_current_pos).*90/6400;
+
                     % target position
                     elapsed_time = clockCurrent - clockStart;
-                    elapsed_time_10_array(k) = elapsed_time;
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
                     
-                    trial_num_10_array(k) = trial_num;
+                    target_traj = 0;
+                    
+                    dataW =  typecast(single([8 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
+                    
+                    trigger_array = [trigger_array 0];
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
+                    
+                else
+                
+                    if trial_trigger_flag
+                        dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        trial_trigger_flag = ~trial_trigger_flag;
+                        trigger_array = [trigger_array 1];
+                    else
+                        trigger_array = [trigger_array 0];
+                    end
+                    
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+
+                    subject_traj = -(subject_current_pos)*90/6400;
+
+                    % target position
+                    elapsed_time = clockCurrent - clockStart;
                     
                     target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
-                    target_traj_10_array(k) = target_traj;
                     
-
                     if mod(k,2) == 0
                         dataR_rda = int8(read(ur_rda, 264, 'int8'));
                         eeg_data_vector = typecast(dataR_rda, 'single');
@@ -242,22 +211,22 @@ switch exp_num
 
                     dataW =  typecast(single([2 target_traj]), 'int8');
                     fwrite(uw, dataW, 'int8');
-                    k = k+1;
+
                     
+    %                 velocity_array = [velocity_array velocity_10_array];
+    %                 current_array = [current_array current_10_array];
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
                 end
+                k = k+1;
                 flush(ur)
-%                 velocity_array = [velocity_array velocity_10_array];
-%                 current_array = [current_array current_10_array];
-                target_traj_array = [target_traj_array target_traj_10_array];
-                subject_traj_array = [subject_traj_array subject_traj_10_array];
-                end
                 
-                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
+                error_array = [error_array (target_traj + subject_traj)^2];
                 
-                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
+                Score = 100 - (target_traj + subject_traj)^2/3;
                 
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
                 
@@ -279,8 +248,6 @@ switch exp_num
 %             hi5Error.(trial_name) = Error_array;
             target_traj_array = [];
             subject_traj_array = [];
-            velocity_array = [];
-            current_array = [];
             eeg_data = [];
             trigger_array = [];
             
@@ -330,12 +297,6 @@ switch exp_num
         hi5EEG = {};
         hi5ZeroPoint = {};
         hi5Trigger = {};
-        subject_traj_10_array = zeros(1,10);
-        elapsed_time_10_array = zeros(1,10);
-        target_traj_10_array = zeros(1,10);
-        velocity_10_array = zeros(1,10);
-        current_10_array = zeros(1,10);
-        trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -404,101 +365,78 @@ switch exp_num
             index = randi(length(zero_point_array));
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
+            k = 1;
             
             while (clockCurrent < clockStart + trial_length + countdown)
 
                 if clockCurrent < (clockStart + countdown)
-                    k = 1;
-                    target_traj_10_array = zeros(1,10);
-                    while k <= 10
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
-
-                        subject_traj = -(subject_current_pos)*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
-
-                        % target position
-%                         elapsed_time = clockCurrent - clockStart;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        
-                        trial_num_10_array(k) = trial_num;
-                        
-                        dataW =  typecast(single([8 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                        k = k+1;
-                    end
                     
-                    trigger_array = [trigger_array non_trigger_10_array];
-                    target_traj_array = [target_traj_array target_traj_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+
+                    subject_traj = -(subject_current_pos)*90/6400;
+
+                    dataW =  typecast(single([8 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
+                    target_traj = 0;
+                    
+                    trigger_array = [trigger_array 0];
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
+                    
                 else
                     
                     if trial_trigger_flag
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                         fwrite(uw, dataW, 'int8');
                         trial_trigger_flag = ~trial_trigger_flag;
-                        trigger_array = [trigger_array trigger_10_array];
+                        trigger_array = [trigger_array 1];
                     else
-                        trigger_array = [trigger_array non_trigger_10_array];
+                        trigger_array = [trigger_array 0];
                     end
                     
-                    k = 1;
-                    while k <= 10
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        % subject position
-    %                     subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    % subject position
+%                     subject_current_pos = Motor1.ActualPosition;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
 
-                        subject_traj = -(subject_current_pos)*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
+                    subject_traj = -(subject_current_pos)*90/6400;
 
-                        % target position
-                        elapsed_time = clockCurrent - clockStart;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        
-                        trial_num_10_array(k) = trial_num;
-                        
-                        target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
-                        target_traj_10_array(k) = target_traj;
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                        end
-                        
-                        
-                        dataW =  typecast(single([1 target_traj]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                    
-                        k = k+1;
+                    % target position
+                    elapsed_time = clockCurrent - clockStart;
+
+                    target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
+
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                     end
-                    flush(ur)
-                    target_traj_array = [target_traj_array target_traj_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+
+                    dataW =  typecast(single([1 target_traj]), 'int8');
+                    fwrite(uw, dataW, 'int8');
+                    
+                    
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
                 end
                 
-                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
+                flush(ur)
                 
-                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
+                error_array = [error_array (target_traj + subject_traj)^2];
+                
+                Score = 100 - (target_traj + subject_traj)^2/3;
                 
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
-
-%                 velocity_array = [velocity_array velocity_10_array];
-                %current_array = [current_array current_10_array];
-                
             
             end
             
@@ -515,8 +453,6 @@ switch exp_num
 %             hi5Error.(trial_name) = Error_array;
             target_traj_array = [];
             subject_traj_array = [];
-            velocity_array = [];
-            current_array = [];
             eeg_data = [];
             trigger_array = [];
             disp(trial_num);
@@ -566,12 +502,6 @@ switch exp_num
         hi5EEG = {};
         hi5ZeroPoint = {};
         hi5Trigger = {};
-%         subject_traj_10_array = zeros(1,10);
-%         elapsed_time_10_array = zeros(1,10);
-%         target_traj_10_array = zeros(1,10);
-%         velocity_10_array = zeros(1,10);
-%         current_10_array = zeros(1,10);
-%         trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -647,50 +577,35 @@ switch exp_num
             
             flush(ur_rda);
             flush(ur);
-            
+            k = 1;
             while (clockCurrent < clockStart + trial_length + countdown)
-                tic
-                if clockCurrent < (clockStart + countdown)
-                    k = 1;
-%                     target_traj_10_array = zeros(1,10);
-%                     while k <= 10
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
-
-                        subject_traj = -(subject_current_pos).*90/6400;
-%                         subject_traj_10_array(k) = subject_traj;
-
-                        % target position
-                        elapsed_time = clockCurrent - clockStart;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        
-%                         trial_num_10_array(k) = trial_num;
-                        
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                        end
-                        
-                        
-                        dataW =  typecast(single([8 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                        k = k+1;
-%                     end
-                    
-%                     trigger_array = [trigger_array non_trigger_10_array];
-%                     target_traj_array = [target_traj_array target_traj_10_array];
-%                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 
-                    data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                if clockCurrent < (clockStart + countdown)
                     
-%                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
-                    newV = typecast(single(data_box), 'int8');
-                    fwrite(u2, newV, 'int8')
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+
+                    subject_traj = -(subject_current_pos).*90/6400;
+
+                    % target position
+                    elapsed_time = clockCurrent - clockStart;
+
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
+
+                    target_traj = 0;
+                    dataW =  typecast(single([8 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
+                    
+                    trigger_array = [trigger_array 0];
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
                     
                 else
                     
@@ -698,93 +613,71 @@ switch exp_num
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                         fwrite(uw, dataW, 'int8');
                         trial_trigger_flag = ~trial_trigger_flag;
-                        trigger_array = [trigger_array trigger_10_array];
+                        trigger_array = [trigger_array 1];
                     else
-                        trigger_array = [trigger_array non_trigger_10_array];
+                        trigger_array = [trigger_array 0];
                     end
                     
-                    
-                    
-                    k = 1;
 %                     while k <= 10
                         
-                        
-                        c = clock;
-                        clockCurrent = c(4)*3600+c(5)*60+c(6);
-                        
-                        tic
-                        
-                        % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
-                        dataR = int8(read(ur, 4, 'int8'));
-                        subject_current_pos = typecast(dataR, 'single');
-                        
-                        toc
-                        
-                        subject_traj = -(subject_current_pos).*90/6400;
-%                         subject_traj_10_array(k) = subject_traj;
 
-                        % target position
-                        elapsed_time = clockCurrent - clockStart;
-%                         elapsed_time_10_array(k) = elapsed_time;
-                        
-%                         trial_num_10_array(k) = trial_num;
-                        
-                        target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
-%                         target_traj_10_array(k) = target_traj;
-                        
-                        
-                        
-                        if mod(k,2) == 0
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                        end
-                        
-                        dataW =  typecast(single([4 current]), 'int8');
-                        fwrite(uw, dataW, 'int8');
-                        
-                        k = k+1;
-                        
-%                     end
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+
+                    % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+                    dataR = int8(read(ur, 4, 'int8'));
+                    subject_current_pos = typecast(dataR, 'single');
+
+                    subject_traj = -(subject_current_pos).*90/6400;
+
+                    % target position
+                    elapsed_time = clockCurrent - clockStart;
+
+                    target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
+
+
+
+
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
+
+                    dataW =  typecast(single([4 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
+
                     
-                    flush(ur)
-                    target_traj_array = [target_traj_array target_traj_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+%                     flush(ur)
+                    target_traj_array = [target_traj_array target_traj];
+                    subject_traj_array = [subject_traj_array subject_traj];
                     
                     
                 end
-                
+                k = k+1;
                 flush(ur)
                 
-                error_array = [error_array (mean(target_traj_10_array + subject_traj_10_array))^2];
+                error_array = [error_array (target_traj + subject_traj)^2];
                 
-                Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
+                Score = 100 - (target_traj + subject_traj)^2/3;
                 
                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 
 %                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)]
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
-
-%                 velocity_array = [velocity_array velocity_10_array];
-%                 current_array = [current_array current_10_array];
-                toc
+                
             end
             dataW =  typecast(single([5 0]), 'int8');
             fwrite(uw, dataW, 'int8');
             
             hi5WristPos.(trial_name) = subject_traj_array;
             hi5TargetPos.(trial_name) = target_traj_array;
-%             hi5Velocity.(trial_name) = velocity_array;
-%             hi5Current.(trial_name) = current_array;
-%             hi5Error.(trial_name) = error_array;
             hi5EEG.(trial_name) = eeg_data;
             hi5ZeroPoint.(trial_name) = zero_point;
             hi5Trigger.(trial_name) = trigger_array;
             target_traj_array = [];
             subject_traj_array = [];
-            velocity_array = [];
-            current_array = [];
             eeg_data = [];
             trigger_array = [];
             disp(trial_num);
@@ -792,9 +685,6 @@ switch exp_num
         end
         hi5Target_zeroAssisted.hi5WristPos = hi5WristPos;
         hi5Target_zeroAssisted.hi5TargetPos = hi5TargetPos;
-%         hi5Target_zeroAssisted.hi5Velocity = hi5Velocity;
-%         hi5Target_zeroAssisted.hi5Current = hi5Current;
-%         hi5Target_zeroAssisted.hi5Error = hi5Error;
         hi5Target_zeroAssisted.hi5EEG = hi5EEG;
         hi5Target_zeroAssisted.hi5ZeroPoint = hi5ZeroPoint;
         hi5Target_zeroAssisted.hi5Trigger = hi5Trigger;

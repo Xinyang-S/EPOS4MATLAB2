@@ -34,10 +34,21 @@ Motor1.DisableNode;
 Motor1.SetOperationMode( OperationModes.ProfileVelocityMode );
 Motor1.EnableNode;
 Motor1.ClearErrorState;
+
+Motor1.SetWithProtocol(19200)
+
 c = clock;
 clockStart = c(4)*3600+c(5)*60+c(6);
 clockStartPrev = clockStart - 4.5;
 startPositionE = Motor1.ActualPosition;
+
+Motor1.ActualPosition
+
+Motor1.GetWithProtocol
+
+Motor1.SetWithProtocol(19200)
+
+Motor1.GetWithProtocol
 
 Motor1.SetWithDigital(1, 1);
 Motor1.SetWithAnalog(1,3500); % untrigger, analog output pin, analog mV value, max 4000
@@ -74,7 +85,7 @@ while (trialNum<trials)
             Motor1.ActualPosition
             Motor1.SetWithAnalog(2,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
             Motor1.SetWithAnalog(1,encTomV(startPositionE, Motor1.ActualPosition)); % degrees*10, analog output pin, analog mV value, max 4000
-
+            
             c = clock;
             clockNew = c(4)*3600+c(5)*60+c(6);
 %             Motor1.MotionInVelocity(velocityN);

@@ -979,6 +979,31 @@ classdef Epos4 < handle
             res = SetAnalog( obj.Handle, obj.NodeID, analogOutputPin, value);
         end 
         
+        function res = GetWithProtocol(obj)
+            % This function is for setting the analog input voltage (decimal value in Volts, max 4V) of an analog pin of the EPOS4 controller
+            %
+            % use it as:
+            %
+            % >> Motor1.GetWithProtocol(inputPin, value)
+            %
+            % A. Yurkewich, 2020
+            %
+            res = GetProtocol( obj.Handle);
+        end
+        
+        function res = SetWithProtocol(obj, varargin)
+            % This function is for setting the analog input voltage (decimal value in Volts, max 4V) of an analog pin of the EPOS4 controller
+            %
+            % use it as:
+            %
+            % >> Motor1.SetWithProtocol(inputPin, value)
+            %
+            % A. Yurkewich, 2020
+            %
+            Baudrate = cell2mat(varargin(1));
+            res = SetProtocol( obj.Handle, Baudrate);
+        end
+        
         function res = SetWithDigital(obj, varargin)
             % This function is for setting the analog input voltage (decimal value in Volts, max 4V) of an analog pin of the EPOS4 controller
             %
