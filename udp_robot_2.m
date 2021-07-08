@@ -127,7 +127,7 @@ while(1)
         c2= c(4)*3600+c(5)*60+c(6);
         dataR = int8(read(ur,8, 'int8'));
         dataR1 = typecast(dataR, 'single');
-        Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
+%         Motor1.SetWithAnalog(2,encTomV(encoderStart, Motor1.ActualPosition));
         mode = dataR1(1);
 %         trajectory = dataR1(2)*6400/90;
         trajectory = dataR1(2);

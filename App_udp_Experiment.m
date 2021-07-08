@@ -566,12 +566,12 @@ switch exp_num
         hi5EEG = {};
         hi5ZeroPoint = {};
         hi5Trigger = {};
-        subject_traj_10_array = zeros(1,10);
-        elapsed_time_10_array = zeros(1,10);
-        target_traj_10_array = zeros(1,10);
-        velocity_10_array = zeros(1,10);
-        current_10_array = zeros(1,10);
-        trial_num_10_array = zeros(1,10);
+%         subject_traj_10_array = zeros(1,10);
+%         elapsed_time_10_array = zeros(1,10);
+%         target_traj_10_array = zeros(1,10);
+%         velocity_10_array = zeros(1,10);
+%         current_10_array = zeros(1,10);
+%         trial_num_10_array = zeros(1,10);
         target_traj_array = [];
         subject_traj_array = [];
         velocity_array = [];
@@ -652,8 +652,8 @@ switch exp_num
                 tic
                 if clockCurrent < (clockStart + countdown)
                     k = 1;
-                    target_traj_10_array = zeros(1,10);
-                    while k <= 10
+%                     target_traj_10_array = zeros(1,10);
+%                     while k <= 10
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         
@@ -661,13 +661,14 @@ switch exp_num
                         subject_current_pos = typecast(dataR, 'single');
 
                         subject_traj = -(subject_current_pos).*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
+%                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
                         elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time_10_array(k) = elapsed_time;
                         
-                        trial_num_10_array(k) = trial_num;
+%                         trial_num_10_array(k) = trial_num;
+                        
                         
                         if mod(k,2) == 0
                             dataR_rda = int8(read(ur_rda, 264, 'int8'));
@@ -675,18 +676,19 @@ switch exp_num
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
                         
+                        
                         dataW =  typecast(single([8 current]), 'int8');
                         fwrite(uw, dataW, 'int8');
                         k = k+1;
-                    end
+%                     end
                     
-                    trigger_array = [trigger_array non_trigger_10_array];
-                    target_traj_array = [target_traj_array target_traj_10_array];
-                    subject_traj_array = [subject_traj_array subject_traj_10_array];
+%                     trigger_array = [trigger_array non_trigger_10_array];
+%                     target_traj_array = [target_traj_array target_traj_10_array];
+%                     subject_traj_array = [subject_traj_array subject_traj_10_array];
                 
-%                     data_box = [roundn(zeros(1,0),-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                    data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                     
-                    data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
+%                     data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)];
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                     
@@ -701,25 +703,36 @@ switch exp_num
                         trigger_array = [trigger_array non_trigger_10_array];
                     end
                     
+                    
+                    
                     k = 1;
-                    while k <= 10
+%                     while k <= 10
+                        
+                        
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        
+                        tic
+                        
                         % subject position                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
                         dataR = int8(read(ur, 4, 'int8'));
                         subject_current_pos = typecast(dataR, 'single');
-
+                        
+                        toc
+                        
                         subject_traj = -(subject_current_pos).*90/6400;
-                        subject_traj_10_array(k) = subject_traj;
+%                         subject_traj_10_array(k) = subject_traj;
 
                         % target position
                         elapsed_time = clockCurrent - clockStart;
-                        elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time_10_array(k) = elapsed_time;
                         
-                        trial_num_10_array(k) = trial_num;
+%                         trial_num_10_array(k) = trial_num;
                         
                         target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
-                        target_traj_10_array(k) = target_traj;
+%                         target_traj_10_array(k) = target_traj;
+                        
+                        
                         
                         if mod(k,2) == 0
                             dataR_rda = int8(read(ur_rda, 264, 'int8'));
@@ -731,10 +744,14 @@ switch exp_num
                         fwrite(uw, dataW, 'int8');
                         
                         k = k+1;
-                    end
+                        
+%                     end
+                    
                     flush(ur)
                     target_traj_array = [target_traj_array target_traj_10_array];
                     subject_traj_array = [subject_traj_array subject_traj_10_array];
+                    
+                    
                 end
                 
                 flush(ur)
@@ -743,9 +760,9 @@ switch exp_num
                 
                 Score = 100 - (mean(target_traj_10_array + subject_traj_10_array))^2/3;
                 
-%                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 
-                data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)]
+%                 data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Score,-5) roundn(trial_num_10_array, -5)]
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
 
