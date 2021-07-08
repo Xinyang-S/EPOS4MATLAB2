@@ -384,6 +384,12 @@ switch exp_num
                     
                     target_traj = 0;
                     
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
+                    
                     trigger_array = [trigger_array 0];
                     target_traj_array = [target_traj_array target_traj];
                     subject_traj_array = [subject_traj_array subject_traj];
@@ -426,7 +432,7 @@ switch exp_num
                     target_traj_array = [target_traj_array target_traj];
                     subject_traj_array = [subject_traj_array subject_traj];
                 end
-                
+                k = k+1;
                 flush(ur)
                 
                 error_array = [error_array (target_traj + subject_traj)^2];
@@ -982,9 +988,6 @@ switch exp_num
         eeg_data = [];
         error_array = [];
         trigger_array = [];
-        subject_traj_10_array = zeros(1,10);
-        strength_10_array = zeros(1,10);
-        trial_num_10_array = zeros(1,10);
         currentPrev=0;
         current=0;
         Score = 0;
@@ -1059,6 +1062,8 @@ switch exp_num
                     strength_array(index) = [];
                 end
                 
+                k = 1;
+                
                 while (clockCurrent < clockStart + trial_length)
                     
                     if mod(trial_index,total_trial_num) == 1 && (block_flag ==1)
@@ -1069,122 +1074,109 @@ switch exp_num
                         while clock_count_down_current < clock_count_down_start + 5
                             c = clock;
                             clock_count_down_current = c(4)*3600+c(5)*60+c(6);
-                            k = 1;
-                            while k <= 10
-                                dataR = int8(read(ur, 4, 'int8'));
-                                subject_position = typecast(dataR, 'single');
-                                subject_traj = -(subject_position)*90/6400;
-                                subject_traj_10_array(k) = subject_traj;
-                                
-                                trial_num_10_array(k) = trial_index;
-                                
-                                
-                                k = k+1;
-                            end
                             
-                            trigger_array = [trigger_array non_trigger_10_array];
-                            target_strength_array = [target_strength_array zeros(1,10)];
-                            subject_traj_array = [subject_traj_array subject_traj_10_array];
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_position = typecast(dataR, 'single');
+                            subject_traj = -(subject_position)*90/6400;
+                            
+                            trigger_array = [trigger_array 0];
+                            target_strength_array = [target_strength_array 0];
+                            subject_traj_array = [subject_traj_array subject_traj];
                 
-                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                            
+                            data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
+                            
                         end
                         block_flag = ~block_flag;
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
+                        flush(ur_rda);
                     else
                         
                         if trial_trigger_flag
                             dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
                             trial_trigger_flag = ~trial_trigger_flag;
-                            trigger_array = [trigger_array trigger_10_array];
+                            trigger_array = [trigger_array 1];
                         else
-                            trigger_array = [trigger_array non_trigger_10_array];
+                            trigger_array = [trigger_array 0];
                         end
                         
-                        k = 1;
-                        while k <= 10
 
-                            c = clock;
-                            clockCurrent = c(4)*3600+c(5)*60+c(6);
-        %                     clockStart = clockCurrent;
-                            elapsed_time = clockCurrent - clockStart;
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+    %                     clockStart = clockCurrent;
+                        elapsed_time = clockCurrent - clockStart;
 
-                            if (elapsed_time > 4)
-                                strength = 0;
-                            end
-
-                            switch strength
-                                case 0
-                                    current = 0;
-                                case 1
-                                    if (elapsed_time > 3.5)
-                                        current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                    elseif (elapsed_time > 0.5)
-                                        current = -2000;
-                                    elseif (elapsed_time > 0)
-                                        current=-2000*(2*(elapsed_time));
-                                    end
-                                case 2
-                                    if (elapsed_time > 3.5)
-                                        current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                    elseif (elapsed_time > 0.5)
-                                        current = -3000;
-                                    elseif (elapsed_time > 0)
-                                        current=-3000*(2*(elapsed_time));
-                                    end
-                                case 3
-                                    if (elapsed_time > 3.5)
-                                        current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
-
-                                    elseif (elapsed_time > 0.5)
-                                        current = -4000;
-                                    elseif (elapsed_time > 0)
-                                        current=-4000*(2*(elapsed_time));
-                                    end
-                            end
-
-                            current = safetyCheck(current);
-                            dataW =  typecast(single([3 current]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-
-                            if mod(k,2) == 0
-                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                                eeg_data_vector = typecast(dataR_rda, 'single');
-                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                            end
-
-                            dataR = int8(read(ur, 4, 'int8'));
-                            subject_position = typecast(dataR, 'single');
-                            subject_traj = -(subject_position)*90/6400;
-                            subject_traj_10_array(k) = subject_traj;
-                            strength_10_array(k) = strength;
-
-                            trial_num_10_array(k) = trial_index;
-
-                            k = k+1;
+                        if (elapsed_time > 4)
+                            strength = 0;
                         end
 
-                        error_array = [error_array abs(mean(subject_traj_10_array))];
-                        Error = mean(error_array);
+                        switch strength
+                            case 0
+                                current = 0;
+                            case 1
+                                if (elapsed_time > 3.5)
+                                    current=-2000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
 
-                        flush(ur)
-                        data_box = [roundn(strength_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5)];
+                                elseif (elapsed_time > 0.5)
+                                    current = -2000;
+                                elseif (elapsed_time > 0)
+                                    current=-2000*(2*(elapsed_time));
+                                end
+                            case 2
+                                if (elapsed_time > 3.5)
+                                    current=-3000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
 
+                                elseif (elapsed_time > 0.5)
+                                    current = -3000;
+                                elseif (elapsed_time > 0)
+                                    current=-3000*(2*(elapsed_time));
+                                end
+                            case 3
+                                if (elapsed_time > 3.5)
+                                    current=-4000*(2*(4-elapsed_time));% current *(0.5 second)*2, make the length within brackets = 1
+
+                                elseif (elapsed_time > 0.5)
+                                    current = -4000;
+                                elseif (elapsed_time > 0)
+                                    current=-4000*(2*(elapsed_time));
+                                end
+                        end
+
+                        dataW =  typecast(single([3 current]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+
+                        if mod(k,2) == 0
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        end
+
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_position = typecast(dataR, 'single');
+                        subject_traj = -(subject_position)*90/6400;
+
+
+%                         error_array = [error_array abs(subject_traj)];
+%                         Error = mean(error_array);
+
+                        
+                        target_strength_array = [target_strength_array strength];
+                        subject_traj_array = [subject_traj_array subject_traj];
+                    
+                        data_box = [roundn(strength,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5)];
                         newV = typecast(single(data_box), 'int8');
                         fwrite(u2, newV, 'int8')
-    %                     velocity = Motor1.ActualVelocity;
-    %                     velocity_array = [velocity_array velocity];
-    %                     motor_current = current;
-    %                     current_array = [current_array motor_current];
-                        target_strength_array = [target_strength_array strength_10_array];
-                        subject_traj_array = [subject_traj_array subject_traj_10_array];
                     end
+                    
+                    k = k+1;
+                    flush(ur)
+                    
+                    
                 end
                 trial_name = strcat('trial',num2str(trial_num));
                 hi5WristPos.(trial_name) = subject_traj_array;
@@ -1193,8 +1185,6 @@ switch exp_num
 %                 hi5Current.(trial_name) = current_array;
                 hi5EEG.(trial_name) = eeg_data;
                 hi5Trigger.(trial_name) = trigger_array;
-                strength_10_array = [];
-                subject_traj_10_array = [];
                 target_strength_array = [];
                 subject_traj_array = [];
                 eeg_data = [];
