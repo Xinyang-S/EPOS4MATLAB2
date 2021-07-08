@@ -757,8 +757,10 @@ switch exp_num
             speed_index = randi(length(speeds));
             speedFlag =speeds(speed_index);
             speeds(speed_index) = [];
+            disp('speed flag')
+            speedFlag
             
-            data_box = [zeros(1,10) zeros(1,10) roundn(Error,-5) zeros(1,10) speedFlag];
+            data_box = [0 0 roundn(0,-5) 0 speedFlag];
             newV = typecast(single(data_box), 'int8');
             fwrite(u2, newV, 'int8')
                     
@@ -811,56 +813,47 @@ switch exp_num
 
                         while clock_count_down_current < clock_count_down_start + 5
                             k = 1;
-                            while k <= 10
-                                c = clock;
-                                clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+%                             while k <= 10
+                            c = clock;
+                            clock_count_down_current = c(4)*3600+c(5)*60+c(6);
 %                                 elapsed_time = clock_count_down_current - clock_count_down_start;
 %                                 elapsed_time_10_array(k) = elapsed_time;
-                                
-                                trial_num_10_array(k) = trial_index;
 
-                                % subject position
-                                dataR = int8(read(ur, 4, 'int8'));
-                                subject_current_pos = typecast(dataR, 'single');
-                                subject_traj = -(subject_current_pos)*90/6400;
-                                subject_traj_10_array(k) = subject_traj;
+%                             trial_num_10_array(k) = trial_index;
 
-                                current_10_array(k) = 0;
-                                
-                                if mod(k,2) == 0
-                                disp('eeg')
-                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                                eeg_data_vector = typecast(dataR_rda, 'single');
-                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                                end
-                                
-                                k = k+1;
+                            % subject position
+                            dataR = int8(read(ur, 4, 'int8'));
+                            subject_current_pos = typecast(dataR, 'single');
+                            subject_traj = -(subject_current_pos)*90/6400;
+%                                 subject_traj_10_array(k) = subject_traj;
+
+                            current_10_array(k) = 0;
+
+                            if mod(k,2) == 0
+                            disp('eeg')
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                             end
                             
-                            trigger_array = [trigger_array non_trigger_10_array];
-                            target_pos_array = [target_pos_array zeros(1,10)];
-                            subject_traj_array = [subject_traj_array subject_traj_10_array];
+                            trigger_array = [trigger_array 0];%non_trigger_10_array];
+                            target_pos_array = [target_pos_array 0];%zeros(1,10)];
+                            subject_traj_array = [subject_traj_array subject_traj];%subject_traj_10_array];
                             
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
                             
-                            data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) speedFlag];
+                            data_box = [0 roundn(subject_traj,-5) roundn(0,-5) roundn(trial_index, -5) speedFlag];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             data_box = [];
                             
                         end
-%                         flush(ur)
                         block_flag = ~block_flag;
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
-%                         eeg_data = [];
-%                         target_pos_array = [];
-%                         subject_traj_array = [];
                     else
-%                         flush(ur)
-%                         flush(ur_rda)
                         if posFlag == 0 && executed ==0
                             index = randi(size(position_array));
                             target_pos = position_array(index);
@@ -874,54 +867,46 @@ switch exp_num
                             dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
                             trial_trigger_flag = ~trial_trigger_flag;
-                            trigger_array = [trigger_array trigger_10_array];
+                            trigger_array = [trigger_array 1];
                         else
-                            trigger_array = [trigger_array non_trigger_10_array];
+                            trigger_array = [trigger_array 0];
                         end
-                        
-                        k = 1;
 
-                        while k <= 10
-                            tic
-                            target_pos_10_array(k) = target_pos;
 
-                            c = clock;
-                            clockCurrent = c(4)*3600+c(5)*60+c(6);
-    %                         elapsed_time = clockCurrent - clockStart;
-    %                         elapsed_time_10_array(k) = elapsed_time;
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        elapsed_time = clockCurrent - clockStart;
+%                         elapsed_time_10_array(k) = elapsed_time;
 
-                            trial_num_10_array(k) = trial_index;
+%                         trial_num_10_array(k) = trial_index;
 
-                            % subject position
-                            dataR = int8(read(ur, 4, 'int8'));
-                            subject_current_pos = typecast(dataR, 'single');
-                            subject_traj = -(subject_current_pos)*90/6400;
-                            subject_traj_10_array(k) = subject_traj;
+                        % subject position
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
+                        subject_traj = -(subject_current_pos)*90/6400;
+                        subject_traj_10_array(k) = subject_traj;
 
-                            if mod(k,2) == 0
-                                disp('eeg')
-                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                                eeg_data_vector = typecast(dataR_rda, 'single');
-                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                            end
-                            dataW =  typecast(single([4 0]), 'int8');
-                            fwrite(uw, dataW, 'int8');
-
-                            current_10_array(k) = 0;
-                            k = k+1;
-                            toc
+                        if mod(k,2) == 0
+                            disp('eeg')
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
+                        dataW =  typecast(single([4 0]), 'int8');
+                        fwrite(uw, dataW, 'int8');
+
+
                         flush(ur)
                         flush(ur_rda)
 
-                        data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
+                        data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) round(speedFlag,-5)];
                         newV = typecast(single(data_box), 'int8');
                         fwrite(u2, newV, 'int8')
                         data_box = [];
     %                     velocity_array = [velocity_array velocity_10_array];
     %                     current_array = [current_array current_10_array];
-                        target_pos_array = [target_pos_array target_pos_10_array];
-                        subject_traj_array = [subject_traj_array subject_traj_10_array];
+                        target_pos_array = [target_pos_array target_pos];
+                        subject_traj_array = [subject_traj_array subject_traj];
                     end
                 end
                 
@@ -951,13 +936,6 @@ switch exp_num
                 disp(trial_num);
                 trial_num = trial_num + 1;
                 trial_index = trial_index + 1;
-                
-%                 if trial_index > total_trial_num*total_block_num
-%                     trial_num_10_array = trial_index*ones(1,10);
-%                     data_box = [roundn(target_pos_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(trial_num_10_array, -5) round(speedFlag)];
-%                     newV = typecast(single(data_box), 'int8');
-%                     fwrite(u2, newV, 'int8')
-%                 end
                 
                 disp('end of trial');
             end
