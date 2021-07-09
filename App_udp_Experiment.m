@@ -863,15 +863,12 @@ switch exp_num
                             subject_traj = -(subject_current_pos)*90/6400;
 %                                 subject_traj_10_array(k) = subject_traj;
 
-                            current_10_array(k) = 0;
 
                             if mod(k,2) == 0
-                            disp('eeg')
-                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                            eeg_data_vector = typecast(dataR_rda, 'single');
-                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                                eeg_data_vector = typecast(dataR_rda, 'single');
+                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                             end
-                            k=k+1;
                             
                             trigger_array = [trigger_array 0];%non_trigger_10_array];
                             target_pos_array = [target_pos_array 0];%zeros(1,10)];
@@ -929,7 +926,7 @@ switch exp_num
                             eeg_data_vector = typecast(dataR_rda, 'single');
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
-                        k=k+1;
+                        
                         dataW =  typecast(single([4 0]), 'int8');
                         fwrite(uw, dataW, 'int8');
 
@@ -942,6 +939,7 @@ switch exp_num
                         target_pos_array = [target_pos_array target_pos];
                         subject_traj_array = [subject_traj_array subject_traj];
                     end
+                    k=k+1;
                     flush(ur)
                     flush(ur_rda)
                 end
@@ -1109,9 +1107,9 @@ switch exp_num
                             subject_position = typecast(dataR, 'single');
                             subject_traj = -(subject_position)*90/6400;
                             
-                            trigger_array = [trigger_array 0];
-                            target_strength_array = [target_strength_array 0];
-                            subject_traj_array = [subject_traj_array subject_traj];
+%                             trigger_array = [trigger_array 0];
+%                             target_strength_array = [target_strength_array 0];
+%                             subject_traj_array = [subject_traj_array subject_traj];
                 
                             
                             data_box = [roundn(0.0,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5)];
@@ -1124,6 +1122,7 @@ switch exp_num
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
                         flush(ur_rda);
+                        flush(ur);
                     else
                         
                         if trial_trigger_flag
@@ -1208,7 +1207,7 @@ switch exp_num
                     
                     
                 end
-                trial_name = strcat('trial',num2str(trial_num));
+                trial_name = strcat('trial',num2str(trial_index));
                 hi5WristPos.(trial_name) = subject_traj_array;
                 hi5TargetPos.(trial_name) = target_strength_array;
 %                 hi5Velocity.(trial_name) = velocity_array;
