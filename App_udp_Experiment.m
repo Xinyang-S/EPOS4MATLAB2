@@ -600,7 +600,7 @@ switch exp_num
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            trial_name = strcat('trial',num2str(trial_num));
+            trial_name = strcat('trial',num2str(trial_index));
             
             flush(ur_rda);
             flush(ur);
