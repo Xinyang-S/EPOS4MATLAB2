@@ -268,7 +268,6 @@ switch exp_num
         Error = mean(error_array);
         Score = 100 - Error/3;
         
-        error_array = [];
         
         Score_array  = [Score_array Score];
         
@@ -480,7 +479,6 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - Error/3;
-        error_array = [];
         Score_array = [Score_array Score];
         
         fclose(uw);
@@ -699,7 +697,7 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - Error/3;
-        error_array = [];
+        
         Score_array = [Score_array Score];
         
         fclose(u2)
@@ -1318,24 +1316,23 @@ switch exp_num
                         eeg_data_vector = typecast(dataR_rda, 'single');
                         eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                     end
-                    k = k+1;
                     
-                    force_target = -[37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02];
+%                     force_target = -[37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02 37.02];
                     force = read(u_force,1,'single');
+                    
+                    force_target = -37.02;
                     
                     trigger_array = [trigger_array 0];
                     force_array = [force_array force];
-                    force_target_array = [force_target_array 37.02];
+                    force_target_array = [force_target_array force_target];
                     
-                    data_box = [roundn(37.02,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
                     
 
                     newV = typecast(single(data_box), 'int8');
                     fwrite(u2, newV, 'int8')
                 elseif clockCurrent >= (clockStart + countdown) % in trial
                     
-                    c = clock;
-                    clockCurrent = c(4)*3600+c(5)*60+c(6);
                     
                     if trial_trigger_flag
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
@@ -1355,19 +1352,19 @@ switch exp_num
                     clockCurrent = c(4)*3600+c(5)*60+c(6);
                     elapsed_time = clockCurrent - clockStart;
 %                     trial_num_10_array(k) = trial_num;
-
+                   
                     if mod(k,2) == 0
                         dataR_rda = int8(read(ur_rda, 264, 'int8'));
                         eeg_data_vector = typecast(dataR_rda, 'single');
                         eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                     end
-                    k = k+1;
+                    tic
+                    
 %                     end
                     force_target = 2.*18.51.*(sin((elapsed_time - countdown + zero_point).*pi/1.547).*sin((elapsed_time - countdown + zero_point).*pi/2.875));
                     force = read(u_force,1,'single');
-                    
-                    flush(u_force)
-    
+                    force = force(1);
+                    toc
                     error_array = [error_array abs((mean(force_target - (force*2 - 30))))];
                     
                     Score = 100 - 2*abs((mean(force_target - (force*2 - 30))));
@@ -1379,19 +1376,23 @@ switch exp_num
                     force_array = [force_array force];
                     force_target_array = [force_target_array force_target];
                     force_target = [];
+                    
                 end
+                if mod(k,10) == 0
+                    flush(u_force)
+                end
+                k = k+1;
+                
             end
             
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
-            gripforce_error.(force_name) = error_array;
             gripforce_eeg.(force_name) = eeg_data;
             gripZeroPoint.(force_name) = zero_point;
             gripTrigger.(force_name) = trigger_array;
             force_target_array = [];
             force_array = [];
-            error_array = [];
             eeg_data = [];
             trigger_array = [];
             trial_num = trial_num+1;
@@ -1407,7 +1408,7 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - Error*2;
-        error_array = [];
+        
         Score_array = [Score_array Score];
         disp('Your Final Score:');
         Master_score = mean(Score_array)
@@ -1534,6 +1535,7 @@ switch exp_num
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
                         clockStart = clockCurrent;
                         eeg_data = [];
+                        force_array = [];
                     else
                         
                         if trial_trigger_flag
@@ -1553,27 +1555,18 @@ switch exp_num
                             strength = 0;
                         end
 
-                        flush(u_force)
                         force = read(u_force,1,'single');
 
-                        
-%                         while k <= 10
-
-                            elapsed_time = clockCurrent - clockStart;
+                        elapsed_time = clockCurrent - clockStart;
 %                             strength_10_array(k) = strength;
-    %                         elapsed_time_10_array(k) = elapsed_time;
+%                         elapsed_time_10_array(k) = elapsed_time;
 %                             trial_num_10_array(k) = trial_index;
 
-                            if mod(k,2) == 0
-                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                                eeg_data_vector = typecast(dataR_rda, 'single');
-                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                            end
-
-                            k = k+1;
-
-%                         end
-                        flush(u_force)
+                        if mod(k,2) == 0
+                            dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                            eeg_data_vector = typecast(dataR_rda, 'single');
+                            eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                        end
 
                         error_array = [error_array abs((mean(10*strength - force)))];
                         
@@ -1587,6 +1580,10 @@ switch exp_num
                         force_target_array = [force_target_array strength];
     %                     pause(0.002)
                     end
+                    if mod(k,10) == 0
+                        flush(u_force)
+                    end
+                    k = k+1;
                 end
                 force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;

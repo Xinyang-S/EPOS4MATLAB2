@@ -37,6 +37,7 @@ posErrorDiffPrev = 0;
 posErrorDiffDifff = 0;
     
 while (clockStart < clockStartPrev + hold)
+    tic
     c = clock;
     clockStart = c(4)*3600+c(5)*60+c(6);
     
@@ -62,6 +63,7 @@ while (clockStart < clockStartPrev + hold)
     posErrorPrev = posError;
     posErrorDiffPrev = posErrorDiff;
     posClockPrev = clockStart;
+    toc
 end
 
 delete(Motor1);

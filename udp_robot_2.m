@@ -41,6 +41,7 @@ init = 0;
 current_pre = 0;
 filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0;
 j = 1;
+tic
 while(1)
     toc
     tic
