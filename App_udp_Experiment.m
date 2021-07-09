@@ -796,7 +796,7 @@ switch exp_num
             disp('speed flag')
             speedFlag
             
-            data_box = [roundn(0,-5) roundn(0,-5) roundn(0,-5) roundn(0,-5) speedFlag];
+            data_box = [roundn(0,-5) roundn(0,-5) roundn(0,-5) roundn(0,-5) round(speedFlag,-5)];
             newV = typecast(single(data_box), 'int8');
             fwrite(u2, newV, 'int8')
                     
@@ -877,7 +877,7 @@ switch exp_num
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
                             
-                            data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(0,-5) roundn(trial_index, -5) speedFlag];
+                            data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(0,-5) roundn(trial_index, -5) round(speedFlag,-5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             data_box = [];
