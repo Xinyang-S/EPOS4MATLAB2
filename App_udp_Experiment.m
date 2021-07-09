@@ -79,6 +79,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        error_trial_array = [];
         trigger_array = [];
         eeg_data = [];
         currentPrev=0;
@@ -213,18 +214,20 @@ switch exp_num
                     fwrite(uw, dataW, 'int8');
 
                     
-    %                 velocity_array = [velocity_array velocity_10_array];
-    %                 current_array = [current_array current_10_array];
                     target_traj_array = [target_traj_array target_traj];
                     subject_traj_array = [subject_traj_array subject_traj];
+                    error_array = [error_array (target_traj + subject_traj)^2];
+                    error_trial_array = [error_trial_array (target_traj + subject_traj)^2];
+                    
+                    Score = 100 - mean(error_trial_array)/3;
+                
+                    if Score < 0 
+                        Score = 0;
+                    end
+                    
                 end
                 k = k+1;
                 flush(ur)
-                
-                error_array = [error_array (target_traj + subject_traj)^2];
-                
-                Score = 100 - (target_traj + subject_traj)^2/3;
-                
                 
                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 newV = typecast(single(data_box), 'int8');
@@ -232,6 +235,8 @@ switch exp_num
                 
                 
             end
+            error_trial_array = [];
+            
 %             Motor1.MotionWithCurrent(0);
             dataW =  typecast(single([5 0]), 'int8');
             fwrite(uw, dataW, 'int8');
@@ -268,9 +273,12 @@ switch exp_num
         Error = mean(error_array);
         Score = 100 - Error/3;
         
+        if Score < 0 
+            Score = 0;
+        end
         
         Score_array  = [Score_array Score];
-        
+        Master_score = mean(Score_array)
         fclose(u2);
         fclose(uw);
 %------------------------Semi-assisted target tracking---------------------
@@ -301,6 +309,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        error_trial_array = [];
         eeg_data = [];
         trigger_array = [];
         currentPrev=0;
@@ -427,6 +436,15 @@ switch exp_num
                     dataW =  typecast(single([1 target_traj]), 'int8');
                     fwrite(uw, dataW, 'int8');
                     
+                    error_array = [error_array (target_traj + subject_traj)^2];
+                
+                    error_trial_array = [error_trial_array (target_traj + subject_traj)^2];
+                    
+                    Score = 100 - mean(error_trial_array)/3;
+
+                    if Score < 0 
+                        Score = 0;
+                    end
                     
                     target_traj_array = [target_traj_array target_traj];
                     subject_traj_array = [subject_traj_array subject_traj];
@@ -434,17 +452,13 @@ switch exp_num
                 k = k+1;
                 flush(ur)
                 
-                error_array = [error_array (target_traj + subject_traj)^2];
-                
-                Score = 100 - (target_traj + subject_traj)^2/3;
-                
                 
                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 newV = typecast(single(data_box), 'int8');
                 fwrite(u2, newV, 'int8')
             
             end
-            
+            error_trial_array = [];
             
             trial_name = strcat('trial',num2str(trial_num));
             hi5WristPos.(trial_name) = subject_traj_array;
@@ -479,8 +493,13 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - Error/3;
-        Score_array = [Score_array Score];
         
+        if Score < 0 
+            Score = 0;
+        end
+        
+        Score_array = [Score_array Score];
+        Master_score = mean(Score_array)
         fclose(uw);
         fclose(u2);
         
@@ -511,6 +530,7 @@ switch exp_num
         velocity_array = [];
         current_array = [];
         error_array = [];
+        error_trial_array = [];
         eeg_data = [];
         trigger_array = [];
         currentPrev=0;
@@ -612,6 +632,8 @@ switch exp_num
                     subject_traj_array = [subject_traj_array subject_traj];
                     
                 else
+                    dataW =  typecast(single([5 current]), 'int8');
+                    fwrite(uw, dataW, 'int8');
                     
                     if trial_trigger_flag
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
@@ -640,8 +662,6 @@ switch exp_num
                     target_traj = 2*18.51*(sin((elapsed_time - countdown + zero_point)*pi/1.547)*sin((elapsed_time - countdown + zero_point)*pi/2.875));
 
 
-
-
                     if mod(k,2) == 0
                         dataR_rda = int8(read(ur_rda, 264, 'int8'));
                         eeg_data_vector = typecast(dataR_rda, 'single');
@@ -656,14 +676,19 @@ switch exp_num
                     target_traj_array = [target_traj_array target_traj];
                     subject_traj_array = [subject_traj_array subject_traj];
                     
+                    error_array = [error_array (target_traj + subject_traj)^2];
+                    error_trial_array = [error_trial_array (target_traj + subject_traj)^2];
                     
+                    Score = 100 - mean(error_trial_array)/3;
+                    if Score < 0 
+                        Score = 0;
+                    end
                 end
                 k = k+1;
                 flush(ur)
                 
-                error_array = [error_array (target_traj + subject_traj)^2];
                 
-                Score = 100 - (target_traj + subject_traj)^2/3;
+                
                 
                 data_box = [roundn(target_traj,-5) roundn(subject_traj,-5) roundn(Score,-5) roundn(trial_num, -5)];
                 
@@ -672,6 +697,7 @@ switch exp_num
                 fwrite(u2, newV, 'int8')
                 
             end
+            error_trial_array = [];
             dataW =  typecast(single([5 0]), 'int8');
             fwrite(uw, dataW, 'int8');
             
@@ -697,9 +723,11 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - Error/3;
-        
+        if Score < 0 
+            Score = 0;
+        end
         Score_array = [Score_array Score];
-        
+        Master_score = mean(Score_array)
         fclose(u2)
         fclose(uw)
         
@@ -901,9 +929,6 @@ switch exp_num
                         dataW =  typecast(single([4 0]), 'int8');
                         fwrite(uw, dataW, 'int8');
 
-
-                        
-
                         data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) round(speedFlag,-5)];
                         newV = typecast(single(data_box), 'int8');
                         fwrite(u2, newV, 'int8')
@@ -1084,7 +1109,7 @@ switch exp_num
                             subject_traj_array = [subject_traj_array subject_traj];
                 
                             
-                            data_box = [roundn(0,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5)];
+                            data_box = [roundn(0.0,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             
@@ -1224,6 +1249,7 @@ switch exp_num
         force_array = [];
         force_target_array = [];
         error_array = [];
+        error_trial_array = [];
         elapsed_time = zeros(1,10);
         trial_num_10_array = zeros(1,10);
         force_target = [];
@@ -1358,17 +1384,19 @@ switch exp_num
                         eeg_data_vector = typecast(dataR_rda, 'single');
                         eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                     end
-                    tic
                     
 %                     end
                     force_target = 2.*18.51.*(sin((elapsed_time - countdown + zero_point).*pi/1.547).*sin((elapsed_time - countdown + zero_point).*pi/2.875));
                     force = read(u_force,1,'single');
                     force = force(1);
-                    toc
                     error_array = [error_array abs((mean(force_target - (force*2 - 30))))];
+                    error_trial_array = [error_trial_array abs((mean(force_target - (force*2 - 30))))];
+                    Score = 100 - 2*mean(error_trial_array);
+                        
+                    if Score < 0 
+                        Score = 0;
+                    end
                     
-                    Score = 100 - 2*abs((mean(force_target - (force*2 - 30))));
-    
                     data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
 
                     newV = typecast(single(data_box), 'int8');
@@ -1384,7 +1412,7 @@ switch exp_num
                 k = k+1;
                 
             end
-            
+            error_trial_array = [];
             force_name = strcat('trial',num2str(trial_num));
             gripforce.(force_name) = force_array;
             gripforce_target.(force_name) = force_target_array;
@@ -1409,8 +1437,12 @@ switch exp_num
         Error = mean(error_array);
         Score = 100 - Error*2;
         
+        if Score < 0 
+            Score = 0;
+        end
+        
         Score_array = [Score_array Score];
-        disp('Your Final Score:');
+%         disp('Your Final Score:');
         Master_score = mean(Score_array)
         
         fclose(u2)
@@ -1426,6 +1458,7 @@ switch exp_num
         force_array = [];
         force_target_array = [];
         error_array = [];
+        error_trial_array = [];
         trigger_array = [];
         block_num = 1;
         gripForceMaintain = {};
@@ -1525,7 +1558,7 @@ switch exp_num
                             force_array = [force_array force];
                             force_target_array = [force_target_array 0];
 
-                            data_box = [roundn(0,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                            data_box = [roundn(0,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_index, -5)];
         %                     disp(data_box);
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
@@ -1536,6 +1569,8 @@ switch exp_num
                         clockStart = clockCurrent;
                         eeg_data = [];
                         force_array = [];
+                        force_target_array = [];
+                        trigger_array = [];
                     else
                         
                         if trial_trigger_flag
@@ -1569,10 +1604,14 @@ switch exp_num
                         end
 
                         error_array = [error_array abs((mean(10*strength - force)))];
-                        
-                        Score = 100 - (abs((mean(10*strength - force)))^2)/3;
+                        error_trial_array = [error_trial_array abs((mean(10*strength - force)))];
+                        Score = 100 - (mean(error_trial_array)^2)/3;
 
-                        data_box = [roundn(strength,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                        if Score < 0 
+                            Score = 0;
+                        end
+                
+                        data_box = [roundn(strength,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_index, -5)];
     %                     disp(data_box);
                         newV = typecast(single(data_box), 'int8');
                         fwrite(u2, newV, 'int8')
@@ -1585,6 +1624,7 @@ switch exp_num
                     end
                     k = k+1;
                 end
+                error_trial_array = [];
                 force_name = strcat('trial',num2str(trial_index));
                 gripforce.(force_name) = force_array;
                 gripforce_target.(force_name) = force_target_array;
@@ -1609,9 +1649,13 @@ switch exp_num
         
         Error = mean(error_array);
         Score = 100 - (Error^2)/3;
-        error_array = [];
+        
+        if Score < 0 
+            Score = 0;
+        end
+        
         Score_array = [Score_array Score];
-        disp('Your Final Score:');
+%         disp('Your Final Score:');
         Master_score = mean(Score_array)
         
         fclose(u2)
