@@ -1,4 +1,4 @@
-a=[1,2,3,4,5];
-if a(end) > 2
-    disp('it is');
-end
+load('aaaSequence.mat')
+load('username.mat')
+date=strcat('d',string(datetime('now','TimeZone','local','Format','uuuu_MM_dd')));
+trialsSequence=sequence.(Username).(date);

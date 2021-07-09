@@ -102,6 +102,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num);
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -331,6 +332,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -555,6 +557,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -777,6 +780,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -1030,6 +1034,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         
         dataW =  typecast(single([4 0]), 'int8');%set current to 0
         fwrite(uw, dataW, 'int8');
@@ -1279,6 +1284,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
         fwrite(uw, dataW, 'int8');
         
@@ -1484,6 +1490,7 @@ switch exp_num
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
         dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
         fwrite(uw, dataW, 'int8');
         
@@ -1891,9 +1898,12 @@ switch exp_num
         load('gripTrack.mat');
         load('gripForceMaintain.mat');
         load('username.mat');
+        load('aaaSequence.mat');
         dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
         expName=strcat('experimentData_',Username,'_',dt,'.mat');
-        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
+        date=strcat('d',string(datetime('now','TimeZone','local','Format','uuuu_MM_dd')));
+        trialsSequence=sequence.(Username).(date);
+        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain','trialsSequence')
 %         save(expName,'hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
         
         disp(strcat('Data was saved succesfully! The file name is'," ",expName));
