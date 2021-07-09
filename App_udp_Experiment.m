@@ -743,7 +743,7 @@ switch exp_num
         flush(ur)
         flush(ur_rda)
         
-        dataW =  typecast(single([0 0]), 'int8');%set current to 0
+        dataW =  typecast(single([0 0]), 'int8');%set zero position
         fwrite(uw, dataW, 'int8');
         
         dataR = int8(read(ur, 4, 'int8'));
@@ -796,7 +796,7 @@ switch exp_num
             disp('speed flag')
             speedFlag
             
-            data_box = [roundn(0,-5) roundn(0,-5) roundn(0,-5) roundn(0,-5) round(speedFlag,-5)];
+            data_box = [roundn(0,-5) roundn(0,-5) roundn(0,-5) roundn(0,-5) roundn(speedFlag,-5)];
             newV = typecast(single(data_box), 'int8');
             fwrite(u2, newV, 'int8')
                     
@@ -877,7 +877,7 @@ switch exp_num
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
                             
-                            data_box = [roundn(0.0,-5) roundn(subject_traj,-5) roundn(0.0,-5) roundn(trial_index, -5) round(speedFlag,-5)];
+                            data_box = [roundn(0.0,-5) roundn(subject_traj,-5) roundn(0.0,-5) roundn(trial_index, -5) roundn(speedFlag,-5)];
                             newV = typecast(single(data_box), 'int8');
                             fwrite(u2, newV, 'int8')
                             data_box = [];
@@ -921,7 +921,7 @@ switch exp_num
                         subject_traj_10_array(k) = subject_traj;
 
                         if mod(k,2) == 0
-                            disp('eeg')
+%                             disp('eeg')
                             dataR_rda = int8(read(ur_rda, 264, 'int8'));
                             eeg_data_vector = typecast(dataR_rda, 'single');
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
@@ -930,7 +930,7 @@ switch exp_num
                         dataW =  typecast(single([4 0]), 'int8');
                         fwrite(uw, dataW, 'int8');
 
-                        data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) round(speedFlag,-5)];
+                        data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) roundn(speedFlag,-5)];
                         newV = typecast(single(data_box), 'int8');
                         fwrite(u2, newV, 'int8')
                         data_box = [];

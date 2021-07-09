@@ -66,7 +66,7 @@ while(1)
 
 %     encTomV(encoderStart, Motor1.ActualPosition)
     
-    if ( mode == 0 )%zero assistance
+    if ( mode == 0 )%zero position
         init = 1;
         encoderStart = Motor1.ActualPosition;
     elseif ( mode  == 1 ) % medium stiffness
