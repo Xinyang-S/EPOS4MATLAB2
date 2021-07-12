@@ -14,6 +14,8 @@ switch expNum
         expName='GripTrack';
     case 7
         expName='GripMaintain';
+    case 10
+        expName='GripCalibration';
     otherwise
         expName='unknownName';
 end
