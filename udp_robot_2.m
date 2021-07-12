@@ -88,9 +88,11 @@ while(1)
     elseif (mode == 5)
         Motor1.MotionWithCurrent(0);
     elseif (mode == 6)% trigger for trial
+        Motor1.SetWithDigital(1, 0);
         Motor1.SetWithDigital(1, 1);
         Motor1.SetWithDigital(1, 0);
     elseif (mode == 7)% trigger for task
+        Motor1.SetWithDigital(2, 0);
         Motor1.SetWithDigital(2, 1);
         Motor1.SetWithDigital(2, 0);
     elseif ( mode  == 8 ) % medium stiffness

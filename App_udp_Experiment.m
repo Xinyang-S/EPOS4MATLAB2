@@ -1899,16 +1899,172 @@ switch exp_num
         load('hi5Torque_Stablization.mat');
         load('gripTrack.mat');
         load('gripForceMaintain.mat');
+        load('gripCalib.mat');
         load('username.mat');
         load('aaaSequence.mat');
         dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
         expName=strcat('experimentData_',Username,'_',dt,'.mat');
         date=strcat('d',string(datetime('now','TimeZone','local','Format','uuuu_MM_dd')));
         trialsSequence=sequence.(Username).(date);
-        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain','trialsSequence')
+        save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripCalib','gripTrack','gripForceMaintain','trialsSequence')
 %         save(expName,'hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
         
         disp(strcat('Data was saved succesfully! The file name is'," ",expName));
         
+%------------------------Grip Calibration------------------------------        
+    case 10
+        fclose(u2)
+        fopen(u2);
+        fopen(uw);
+        flush(u_force);
+        flush(ur_rda);
+        trial_length = 5;
+        disp('Task 10: grip Calibration')
+        force_array = [];
+        force_target_array = [];
+        error_array = [];
+        error_trial_array = [];
+        force_target = 0;
+        eeg_data = [];
+        trial_num = 1;
+        gripTrack = {};
+        gripforce = {};
+        gripforce_target = {};
+        gripforce_error = {};
+        gripforce_eeg = {};
+        gripZeroPoint = {};
+        gripTrigger = {};
+        trigger_array = [];
+        Error = 0;
+        Score = 0;
+        
+        dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
+        fwrite(uw, dataW, 'int8');
+        sequenceSave(exp_num)
+        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
+        fwrite(uw, dataW, 'int8');
+        
+        while(trial_num <= total_trial_num)
+            disp('start of trial');
+            disp(trial_num);
+            
+            trial_trigger_flag = 1;
+            
+            pause_value = 0;
+            
+            try
+                pause = read(u_checkpause,1,'string');
+                pause_string = split(pause,'');
+                pause_value = str2double(pause_string(2));
+                if pause_value == 1
+                    disp('pause value:');
+                    disp(pause_value);
+                end
+            catch
+            end
+            
+            while pause_value
+                try
+                    pause = read(u_checkpause,1,'string');
+                    pause_string = split(pause,'');
+                    pause_value = str2double(pause_string(2));
+                    if pause_value == 0
+                        disp('pause value:');
+                        disp(pause_value);
+                    end
+                catch
+                end
+            end
+            
+            flush(ur_rda);
+            
+            c = clock;
+            clockStart = c(4)*3600+c(5)*60+c(6);
+            clockCurrent = clockStart;
+        
+            k = 1;
+            while (clockCurrent < clockStart + trial_length + countdown)
+                if clockCurrent < (clockStart + countdown) % countdown
+%                     k = 1;
+%                     while k <= 10
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
+                    
+                    force = read(u_force,1,'single');
+                    
+                    trigger_array = [trigger_array 0];
+                    force_array = [force_array force];
+                    
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
+                    
+                    newV = typecast(single(data_box), 'int8');
+                    fwrite(u2, newV, 'int8')
+                    
+                elseif clockCurrent >= (clockStart + countdown) % in trial
+                    
+                    
+                    if trial_trigger_flag
+                        dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
+                        fwrite(uw, dataW, 'int8');
+                        trial_trigger_flag = ~trial_trigger_flag;
+                        trigger_array = [trigger_array 1];
+                    else
+                        trigger_array = [trigger_array 0];
+                    end
+                    
+                    c = clock;
+                    clockCurrent = c(4)*3600+c(5)*60+c(6);
+                    elapsed_time = clockCurrent - clockStart;
+                   
+                    if mod(k,2) == 0
+                        dataR_rda = int8(read(ur_rda, 264, 'int8'));
+                        eeg_data_vector = typecast(dataR_rda, 'single');
+                        eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+                    end
+                    
+                    force = read(u_force,1,'single');
+                    force = force(1);
+                    
+                    data_box = [roundn(force_target,-5) roundn(force,-5) roundn(Score,-5) roundn(trial_num, -5)];
+
+                    newV = typecast(single(data_box), 'int8');
+                    fwrite(u2, newV, 'int8')
+                    force_array = [force_array force];
+                    
+                end
+                if mod(k,10) == 0
+                    flush(u_force)
+                end
+                k = k+1;
+                
+            end
+            force_name = strcat('trial',num2str(trial_num));
+            gripforce.(force_name) = force_array;
+            gripforce_eeg.(force_name) = eeg_data;
+            gripTrigger.(force_name) = trigger_array;
+            force_target_array = [];
+            force_array = [];
+            eeg_data = [];
+            trigger_array = [];
+            trial_num = trial_num+1;
+            disp('end of trial');
+        end
+        gripCalib.gripForce = gripforce;
+        gripCalib.EEG = gripforce_eeg;
+        gripCalib.gripTrigger = gripTrigger;
+%         gripTrack.gripforce_error = gripforce_error;
+        save ('gripCalib.mat','gripCalib');
+        
+        
+        fclose(u2)
+        fclose(uw);
 end
 end
