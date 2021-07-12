@@ -95,17 +95,6 @@ while(1)
         Motor1.SetWithDigital(2, 0);
     elseif ( mode  == 8 ) % medium stiffness
         init = 0;
-% %         KW=-4;
-%         KW = -(abs(encoder/1000)+1)*1.3;
-%         DW= 0;
-%         if (current_pre - current) > 300
-%             current = current_pre - 100
-%         elseif (current_pre - current) < -300
-%             current = current_pre + 100
-%         end
-% 
-%         current_pre = current;
-
 
         KW_zero=-30/abs(encoder/1000);
         if KW_zero < -30

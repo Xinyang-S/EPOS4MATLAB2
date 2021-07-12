@@ -17,6 +17,7 @@ port_rda = 6666;
 uw_rda = udp('LocalHost', port_rda+1,'timeout',100);
 ur_rda = udpport('LocalPort', port_rda+2);
 
+exp_info = [];
 data_string = [];
 Score_array = [];
 
@@ -38,13 +39,13 @@ while(1)
 %at every start of experiments
 
 flush(u4)
-app_data = read(u4,10,'string');
+app_data = read(u4,12,'string');
 app_data_string = split(app_data,'');
 disp(app_data)
-exp_num = str2double(app_data_string(2));
-total_trial_num = str2double(cell2mat(strcat(app_data_string(3),app_data_string(4),app_data_string(5))));
-trial_length = str2double(cell2mat(strcat(app_data_string(6),app_data_string(7),app_data_string(8))));
-total_block_num = str2double(cell2mat(strcat(app_data_string(9),app_data_string(10),app_data_string(11))));
+exp_num = str2double(cell2mat(strcat(app_data_string(2),app_data_string(3),app_data_string(4))));
+total_trial_num = str2double(cell2mat(strcat(app_data_string(5),app_data_string(6),app_data_string(7))));
+trial_length = str2double(cell2mat(strcat(app_data_string(8),app_data_string(9),app_data_string(10))));
+total_block_num = str2double(cell2mat(strcat(app_data_string(11),app_data_string(12),app_data_string(13))));
 
 countdown = 3;
 
@@ -864,15 +865,15 @@ switch exp_num
 %                                 subject_traj_10_array(k) = subject_traj;
 
 
-                            if mod(k,2) == 0
-                                dataR_rda = int8(read(ur_rda, 264, 'int8'));
-                                eeg_data_vector = typecast(dataR_rda, 'single');
-                                eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
-                            end
-                            
-                            trigger_array = [trigger_array 0];%non_trigger_10_array];
-                            target_pos_array = [target_pos_array 0];%zeros(1,10)];
-                            subject_traj_array = [subject_traj_array subject_traj];%subject_traj_10_array];
+%                             if mod(k,2) == 0
+%                                 dataR_rda = int8(read(ur_rda, 264, 'int8'));
+%                                 eeg_data_vector = typecast(dataR_rda, 'single');
+%                                 eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
+%                             end
+%                             
+%                             trigger_array = [trigger_array 0];%non_trigger_10_array];
+%                             target_pos_array = [target_pos_array 0];%zeros(1,10)];
+%                             subject_traj_array = [subject_traj_array subject_traj];%subject_traj_10_array];
                             
                             dataW =  typecast(single([4 current]), 'int8');
                             fwrite(uw, dataW, 'int8');
@@ -882,7 +883,10 @@ switch exp_num
                             fwrite(u2, newV, 'int8')
                             data_box = [];
                             
+                            
                         end
+%                         flush(ur)
+%                         flush(ur_rda)
                         block_flag = ~block_flag;
                         c = clock;
                         clockCurrent = c(4)*3600+c(5)*60+c(6);
@@ -1610,7 +1614,7 @@ switch exp_num
 
                         error_array = [error_array abs((mean(10*strength - force)))];
                         error_trial_array = [error_trial_array abs((mean(10*strength - force)))];
-                        Score = 100 - (mean(error_trial_array)^2)/3;
+                        Score = 100 - mean(error_trial_array);
 
                         if Score < 0 
                             Score = 0;
