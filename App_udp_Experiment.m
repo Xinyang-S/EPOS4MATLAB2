@@ -600,7 +600,7 @@ switch exp_num
             zero_point = zero_point_array(index);
             zero_point_array(index) = [];
             
-            trial_name = strcat('trial',num2str(trial_index));
+            trial_name = strcat('trial',num2str(trial_num));
             
             flush(ur_rda);
             flush(ur);
@@ -1007,11 +1007,10 @@ switch exp_num
         hi5Velocity = {};
         hi5Current = {};
         hi5EEG = {};
+        hi5Trigger = {};
         hi5ZeroPoint = {};
         target_strength_array = [];
         subject_traj_array = [];
-        velocity_array = [];
-        current_array = [];
         eeg_data = [];
         error_array = [];
         trigger_array = [];
