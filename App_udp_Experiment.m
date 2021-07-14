@@ -331,6 +331,9 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
         sequenceSave(exp_num)
@@ -556,6 +559,9 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
         sequenceSave(exp_num)
@@ -779,6 +785,9 @@ switch exp_num
         block_num = 1;
         speeds=[0,1];
         
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
         sequenceSave(exp_num)
@@ -931,7 +940,7 @@ switch exp_num
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
                         
-                        dataW =  typecast(single([4 0]), 'int8');
+                        dataW =  typecast(single([5 0]), 'int8');
                         fwrite(uw, dataW, 'int8');
 
                         data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) roundn(speedFlag,-5)];
@@ -1284,10 +1293,13 @@ switch exp_num
             j = j+1;
         end
         
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
+        
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
         sequenceSave(exp_num)
-        dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
         fwrite(uw, dataW, 'int8');
         
         while(trial_num <= total_trial_num)
@@ -1490,6 +1502,8 @@ switch exp_num
         flush(u_force);
         flush(ur_rda)
         
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');
         sequenceSave(exp_num)
@@ -1712,7 +1726,7 @@ switch exp_num
             trial_length = 3;
 
             block_num = 1;
-            dataW =  typecast(single([4 0]), 'int8');%set current to 0
+            dataW =  typecast(single([5 0]), 'int8');%set current to 0
             fwrite(uw, dataW, 'int8');
             flush(ur)
             while(block_num <= total_block_num)
@@ -1941,6 +1955,9 @@ switch exp_num
         trigger_array = [];
         Error = 0;
         Score = 0;
+        
+        dataW =  typecast(single([4 0]), 'int8');%zero assistance
+        fwrite(uw, dataW, 'int8');
         
         dataW =  typecast(single([7 0]), 'int8');%start trigger of task PIN 2
         fwrite(uw, dataW, 'int8');

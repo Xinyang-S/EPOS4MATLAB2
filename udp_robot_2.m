@@ -84,6 +84,8 @@ while(1)
         Motor1.MotionWithCurrent(trajectory);
     elseif ( mode == 4 )%zero assistance
         init = 0;
+        Motor1.SetWithDigital(2, 0);
+        Motor1.SetWithDigital(1, 0);
 %         Motor1.MotionWithCurrent(0);
     elseif (mode == 5)
         Motor1.MotionWithCurrent(0);
