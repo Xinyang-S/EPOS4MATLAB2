@@ -1709,6 +1709,7 @@ switch exp_num
             Error = 0;
             posFlag = 0;
             trial_index = 1;
+            trial_length = 3;
 
             block_num = 1;
             dataW =  typecast(single([4 0]), 'int8');%set current to 0
@@ -1763,28 +1764,29 @@ switch exp_num
                             clock_count_down_current = clock_count_down_start;
 
                             while clock_count_down_current < clock_count_down_start + 5
-                                k = 1;
-                                while k <= 10
-                                    c = clock;
-                                    clock_count_down_current = c(4)*3600+c(5)*60+c(6);
-                                    elapsed_time = clock_count_down_current - clock_count_down_start;
-                                    elapsed_time_10_array(k) = elapsed_time;
+%                                 k = 1;
+%                                 while k <= 10
+                                c = clock;
+                                clock_count_down_current = c(4)*3600+c(5)*60+c(6);
+                                elapsed_time = clock_count_down_current - clock_count_down_start;
+%                                 elapsed_time_10_array(k) = elapsed_time;
 
-                                    % subject position
-                                    dataR = int8(read(ur, 4, 'int8'));
-                                    subject_current_pos = typecast(dataR, 'single');
-                                    subject_traj = -(subject_current_pos)*90/6400;
-                                    subject_traj_10_array(k) = subject_traj;
+                                % subject position
+                                dataR = int8(read(ur, 4, 'int8'));
+                                subject_current_pos = typecast(dataR, 'single');
+                                subject_traj = -(subject_current_pos)*90/6400;
+%                                 subject_traj_10_array(k) = subject_traj;
 
-                                    current_10_array(k) = 0;
-                                    k = k+1;
-                                end
+%                                 current_10_array(k) = 0;
+%                                 k = k+1;
+%                                 end
                                 
                                 dataW =  typecast(single([4 current]), 'int8');
                                 fwrite(uw, dataW, 'int8');
 
-                                data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                                newV = typecast(single(data_box), 'int8')
+%                                 data_box = [roundn(zeros(1,10),-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                                data_box = [roundn(0,-5),roundn(subject_traj,-5),roundn(Error,-5),roundn(elapsed_time,-5)];
+                                newV = typecast(single(data_box), 'int8');
                                 fwrite(u2, newV, 'int8')
                             end
                             block_flag = ~block_flag;
@@ -1793,7 +1795,8 @@ switch exp_num
                             clockStart = clockCurrent;
 
                         end
-
+                            
+                        
                         if posFlag == 0 && executed ==0
                             index = randi(size(position_array));
                             target_pos = position_array(index);
@@ -1806,68 +1809,69 @@ switch exp_num
                             sinPos=treshold;
                             executed2=1;
                         end
-                        k = 1;
-                        while k <= 10
+%                         k = 1;
+%                         while k <= 10
 
                             %target_pos_10_array(k) = target_pos;
 
-                            c = clock;
-                            clockCurrent = c(4)*3600+c(5)*60+c(6);
-                            elapsed_time = clockCurrent - clockStart;
-                            elapsed_time_10_array(k) = elapsed_time;
-                            
-                            % target position
-                            if target_pos==0
-                                if abs(sinPos) > 0.25
-                                sinPos=-(treshold+treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2);
-                                %sinPos=treshold+treshold/2*cos(2*sinTime)-treshold/2;
-                                else
-                                    sinPos=0;
-                                end
+                        c = clock;
+                        clockCurrent = c(4)*3600+c(5)*60+c(6);
+                        elapsed_time = clockCurrent - clockStart;
+%                             elapsed_time_10_array(k) = elapsed_time;
+                        disp(elapsed_time);
+                        % target position
+                        if target_pos==0
+                            if abs(sinPos) > 0.25
+                            sinPos=-(treshold+treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2);
+                            %sinPos=treshold+treshold/2*cos(2*sinTime)-treshold/2;
                             else
-                                if abs(sinPos) < abs(treshold)-0.25
-                                sinPos=treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
-                                %sinPos=treshold/2*cos(2*sinTime)-treshold/2;
-                                else
-                                    sinPos=-target_pos;
-                                end
+                                sinPos=0;
                             end
-                            target_traj_10_array(k) = sinPos;
+                        else
+                            if abs(sinPos) < abs(treshold)-0.25
+                            sinPos=treshold/2*cos(1.5*block_num*((40/abs(treshold))^1.1)*elapsed_time)-treshold/2;
+                            %sinPos=treshold/2*cos(2*sinTime)-treshold/2;
+                            else
+                                sinPos=-target_pos;
+                            end
+                        end
+%                         target_traj_10_array(k) = sinPos;
 
-                            % subject position
-                            dataR = int8(read(ur, 4, 'int8'));
-                            subject_current_pos = typecast(dataR, 'single');
-                            subject_traj = -(subject_current_pos)*90/6400;
-                            subject_traj_10_array(k) = subject_traj;
+                        % subject position
+                        dataR = int8(read(ur, 4, 'int8'));
+                        subject_current_pos = typecast(dataR, 'single');
+                        subject_traj = -(subject_current_pos)*90/6400;
+%                         subject_traj_10_array(k) = subject_traj;
 
 %                             current_10_array(k) = 0;
-                            k = k+1;
-                        end
+%                             k = k+1;
+%                         end
 
-                        data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
-                        newV = typecast(single(data_box), 'int8')
-                        fwrite(u2, newV, 'int8')
-
-%                         velocity_array = [velocity_array velocity_10_array];
-%                         current_array = [current_array current_10_array];
-                        target_pos_array = [target_pos_array target_pos_10_array];
-                        subject_traj_array = [subject_traj_array subject_traj_10_array];
+%                         data_box = [roundn(target_traj_10_array,-5) roundn(subject_traj_10_array,-5) roundn(Error,-5) roundn(elapsed_time_10_array, -5)];
+                        data_box = [roundn(sinPos,-5),roundn(subject_traj,-5),roundn(Error,-5),roundn(elapsed_time,-5)];
+                        newV = typecast(single(data_box), 'int8');
+                        fwrite(u2, newV, 'int8');
+% 
+% %                         velocity_array = [velocity_array velocity_10_array];
+% %                         current_array = [current_array current_10_array];
+%                         target_pos_array = [target_pos_array target_pos_10_array];
+%                         subject_traj_array = [subject_traj_array subject_traj_10_array];
                     end
                     
                     dataW =  typecast(single([5 0]), 'int8');%set current to 0
                     fwrite(uw, dataW, 'int8');
 
                     posFlag = ~posFlag;
-                    if block_num == 1
-                        trial_name = strcat('Slow_trial',num2str(trial_index));
-                    elseif block_num == 2
-                        trial_name = strcat('Fast_trial',num2str(trial_index));
-                    else
-                        trial_name = strcat('trial',num2str(trial_index));
-                    end
+%                     if block_num == 1
+%                         trial_name = strcat('Slow_trial',num2str(trial_index));
+%                     elseif block_num == 2
+%                         trial_name = strcat('Fast_trial',num2str(trial_index));
+%                     else
+%                         trial_name = strcat('trial',num2str(trial_index));
+%                     end
 
-                    hi5WristPos.(trial_name) = subject_traj_array;
-                    hi5TargetPos.(trial_name) = target_pos_array;
+%                     hi5WristPos.(trial_name) = subject_traj_array;
+%                     hi5TargetPos.(trial_name) = target_pos_array;
 %                     hi5Velocity.(trial_name) = velocity_array;
 %                     hi5Current.(trial_name) = current_array;
                     target_pos_array = [];
@@ -1882,8 +1886,8 @@ switch exp_num
                 block_num = block_num + 1;
                 disp(['Block number: ', num2str(block_num)]);
             end
-            hi5Position_Track.hi5WristPos = hi5WristPos;
-            hi5Position_Track.hi5TargetPos = hi5TargetPos;
+%             hi5Position_Track.hi5WristPos = hi5WristPos;
+%             hi5Position_Track.hi5TargetPos = hi5TargetPos;
 %             hi5Position_Track.hi5Velocity = hi5Velocity;
 %             hi5Position_Track.hi5Current = hi5Current;
             %save ('hi5Position_Track.mat','hi5Position_Track');
