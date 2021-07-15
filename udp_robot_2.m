@@ -37,6 +37,7 @@ KW = 0;
 DW= 0;
 trajectory = 0;
 mode = 4;
+mode_pre = 4;
 init = 0;
 current_pre = 0;
 filterLP_D = 0.7; posError = 0; posErrorDiffNew=0; posErrorDiff = 0; posErrorPrev = 0;
@@ -91,12 +92,20 @@ while(1)
         Motor1.MotionWithCurrent(0);
     elseif (mode == 6)% trigger for trial
         Motor1.SetWithDigital(1, 0);
-        Motor1.SetWithDigital(1, 1);
-        Motor1.SetWithDigital(1, 0);
+        if mode_pre ~= mode
+            Motor1.SetWithDigital(1, 1);
+            disp('Trial Trigger')
+            Motor1.SetWithDigital(1, 0);
+        end
+        
     elseif (mode == 7)% trigger for task
         Motor1.SetWithDigital(2, 0);
-        Motor1.SetWithDigital(2, 1);
-        Motor1.SetWithDigital(2, 0);
+        if mode_pre ~= mode
+            Motor1.SetWithDigital(2, 1);
+            disp('Trial Trigger')
+            Motor1.SetWithDigital(2, 0);
+        end
+        
     elseif ( mode  == 8 ) % medium stiffness
         init = 0;
 
@@ -110,6 +119,7 @@ while(1)
         Motor1.MotionWithCurrent(current_zero);
     else
     end
+    mode_pre = mode;
     %write data
     dataW =  typecast(single(encoder), 'int8');
     fwrite(uw, dataW, 'int8');

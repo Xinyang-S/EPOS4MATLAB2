@@ -1383,6 +1383,7 @@ switch exp_num
                     if trial_trigger_flag
                         dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                         fwrite(uw, dataW, 'int8');
+%                         disp('Trial Trigger')
                         dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
                         fwrite(uw, dataW, 'int8');
                         trial_trigger_flag = ~trial_trigger_flag;
@@ -1599,6 +1600,7 @@ switch exp_num
                         if trial_trigger_flag
                             dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
+                            pause(0.01)
                             dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
                             trial_trigger_flag = ~trial_trigger_flag;
