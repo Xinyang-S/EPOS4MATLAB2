@@ -85,13 +85,13 @@ while(1)
         Motor1.MotionWithCurrent(trajectory);
     elseif ( mode == 4 )%zero assistance
         init = 0;
-        Motor1.SetWithDigital(2, 0);
-        Motor1.SetWithDigital(1, 0);
+%         Motor1.SetWithDigital(2, 0);
+%         Motor1.SetWithDigital(1, 0);
 %         Motor1.MotionWithCurrent(0);
     elseif (mode == 5)
         Motor1.MotionWithCurrent(0);
     elseif (mode == 6)% trigger for trial
-        Motor1.SetWithDigital(1, 0);
+%         Motor1.SetWithDigital(1, 0);
         if mode_pre ~= mode
             Motor1.SetWithDigital(1, 1);
             disp('Trial Trigger')
@@ -99,7 +99,7 @@ while(1)
         end
         
     elseif (mode == 7)% trigger for task
-        Motor1.SetWithDigital(2, 0);
+%         Motor1.SetWithDigital(2, 0);
         if mode_pre ~= mode
             Motor1.SetWithDigital(2, 1);
             disp('Trial Trigger')

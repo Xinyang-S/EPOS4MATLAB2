@@ -940,7 +940,7 @@ switch exp_num
                             eeg_data = [eeg_data eeg_data_vector(1:33)' ,eeg_data_vector(34:66)'];
                         end
                         
-                        dataW =  typecast(single([5 0]), 'int8');
+                        dataW =  typecast(single([4 0]), 'int8');
                         fwrite(uw, dataW, 'int8');
 
                         data_box = [roundn(target_pos,-5) roundn(subject_traj,-5) roundn(Error,-5) roundn(trial_index, -5) roundn(speedFlag,-5)];
