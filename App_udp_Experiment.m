@@ -1600,7 +1600,7 @@ switch exp_num
                         if trial_trigger_flag
                             dataW =  typecast(single([6 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
-                            pause(0.01)
+%                             pause(0.01)
                             dataW =  typecast(single([4 0]), 'int8');%start trigger of trial PIN 1
                             fwrite(uw, dataW, 'int8');
                             trial_trigger_flag = ~trial_trigger_flag;
@@ -1925,7 +1925,7 @@ switch exp_num
         dt=string(datetime('now','TimeZone','local','Format','uuuu_MM_dd''T''HH_mm_ss'));
         expName=strcat('experimentData_',Username,'_',dt,'.mat');
         date=strcat('d',string(datetime('now','TimeZone','local','Format','uuuu_MM_dd')));
-        trialsSequence=sequence.(Username).(date);
+        trialsSequence = sequence.(Username).(date);
         save(expName,'hi5Target_fullAssisted','hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripCalib','gripTrack','gripForceMaintain','trialsSequence')
 %         save(expName,'hi5Target_semiAssisted','hi5Target_zeroAssisted','hi5Position_Track','hi5Torque_Stablization','gripTrack','gripForceMaintain')
         
