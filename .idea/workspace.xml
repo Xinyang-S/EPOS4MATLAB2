@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="58dabf89-690c-446b-9dba-1bd6132c8443" name="Default Changelist" comment="" />
+    <list default="true" id="58dabf89-690c-446b-9dba-1bd6132c8443" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AMainApp.mlapp" beforeDir="false" afterPath="$PROJECT_DIR$/AMainApp.mlapp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/App_HI5_TargetTracking_SemiAssisted.mlapp" beforeDir="false" afterPath="$PROJECT_DIR$/App_HI5_TargetTracking_SemiAssisted.mlapp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aaaSequence.mat" beforeDir="false" afterPath="$PROJECT_DIR$/aaaSequence.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gripCalib.mat" beforeDir="false" afterPath="$PROJECT_DIR$/gripCalib.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gripForceMaintain.mat" beforeDir="false" afterPath="$PROJECT_DIR$/gripForceMaintain.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gripTrack.mat" beforeDir="false" afterPath="$PROJECT_DIR$/gripTrack.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hi5Position_Track.mat" beforeDir="false" afterPath="$PROJECT_DIR$/hi5Position_Track.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hi5Target_SemiAssisted.mat" beforeDir="false" afterPath="$PROJECT_DIR$/hi5Target_SemiAssisted.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hi5Target_fullAssisted.mat" beforeDir="false" afterPath="$PROJECT_DIR$/hi5Target_fullAssisted.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hi5Target_zeroAssisted.mat" beforeDir="false" afterPath="$PROJECT_DIR$/hi5Target_zeroAssisted.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hi5Torque_Stablization.mat" beforeDir="false" afterPath="$PROJECT_DIR$/hi5Torque_Stablization.mat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/username.mat" beforeDir="false" afterPath="$PROJECT_DIR$/username.mat" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
